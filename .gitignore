@@ -1,0 +1,19 @@
+# Virtual Environment
+myenv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+# Django
+*.log
+/media/
+/static/
+
+# Node (for React later)
+node_modules/
+EOF
