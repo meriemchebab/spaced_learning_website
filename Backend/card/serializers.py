@@ -8,7 +8,6 @@ class CardSerializer(serializers.ModelSerializer):
         feilds = [
             'id', 'question', 'answer', 'topic','topic_name', 'image', 'card_type',
                 'review_method', 'attached_file', 'audio', 'context_hint', 'due'
-            
         ]
     def validate_qst(self,value : str):
         if(len(value))<5:

@@ -6,6 +6,10 @@ from django.db import transaction
 from datetime import datetime, timezone as dt_timezone
 from fsrs import Card as FSRScard , Scheduler as FSRSscheduler , review_log,State ,Rating
 from django.utils import timezone
+from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .serializers import CardSerializer,TopicSerializer,ExamSerializer
 # Rating.Again (==1) forgot the card
 # Rating.Hard (==2) remembered the card with serious difficulty
 # Rating.Good (==3) remembered the card after a hesitation
@@ -37,15 +41,7 @@ def fetsh_card_by_id(request,card_id : int):
         "attached_file": card.attached_file.url if card.attached_file else None,
         "audio": card.audio.url if card.audio else None,
         "context_hint": card.context_hint,
-        # "due": card.due,
-        # "stability": card.stability,
-        # "difficulty": card.difficulty,
-        # "elapsed_days": card.elapsed_days,
-        # "scheduled_days": card.scheduled_days,
-        # "reps": card.reps,
-        # "lapses": card.lapses,
-        # "state": card.state,
-        # "last_review": card.last_review,
+      
     }
     return Response(respo, status=200)
 
@@ -67,15 +63,7 @@ def _serialize_card_info(card : Card):
         "attached_file": card.attached_file.url if card.attached_file else None,
         "audio": card.audio.url if card.audio else None,
         "context_hint": card.context_hint,
-        # "due": card.due,
-        # "stability": card.stability,
-        # "difficulty": card.difficulty,
-        # "elapsed_days": card.elapsed_days,
-        # "scheduled_days": card.scheduled_days,
-        # "reps": card.reps,
-        # "lapses": card.lapses,
-        # "state": card.state,
-        # "last_review": card.last_review,
+      
     }
 def get_fsrs_data(card : Card):
     return {
@@ -179,7 +167,22 @@ def calculate_fsrs_stats(db_card, user_rating, now):
         "reps": reps,
         "lapses": lapses
     }
-
+def save_to_log(db_card : Card , user_rating, duration_ms , previous_state,review_datetime):
+        """ Create the historical ReviewLog using the log FSRS generated"""
+        ReviewLog.objects.create(
+            card_id=db_card,
+            rating=user_rating,
+            state=previous_state, # The state the card was in BEFORE this review
+            review_duration_ms=duration_ms,
+            review_datetime = review_datetime,
+            # FSRS saves the snapshot of the math right after the review
+            due=db_card.due,
+            stability=db_card.stability,
+            difficulty = db_card.difficulty,
+            elapsed_days=db_card.elapsed_days,
+            scheduled_days=db_card.scheduled_days,
+        )
+@api_view(['POST'])
 def process_flashcard_review(card_id :int , user_rating :int, duration_ms :int):
     """submit the rating to a card and update it with history logging"""
     db_card = get_object_or_404(Card , pk=card_id) #return a dict of the fsrs data of that card
@@ -220,28 +223,50 @@ def process_flashcard_review(card_id :int , user_rating :int, duration_ms :int):
                 save_to_log(db_card,fsrs_log.rating,fsrs_log.review_duration , previous_state,fsrs_log.review_datetime)
     except Exception as e:
         print(f"an error occured while saving the updated version of the card , error : {e}")
-        
+        return Response("an error occured while submiting the review",status=404)
+    return Response("card been updated successfuly",status=201)
 
-def save_to_log(db_card : Card , user_rating, duration_ms , previous_state,review_datetime):
-        """ Create the historical ReviewLog using the log FSRS generated"""
-        ReviewLog.objects.create(
-            card_id=db_card,
-            rating=user_rating,
-            state=previous_state, # The state the card was in BEFORE this review
-            review_duration_ms=duration_ms,
-            review_datetime = review_datetime,
-            # FSRS saves the snapshot of the math right after the review
-            due=db_card.due,
-            stability=db_card.stability,
-            difficulty = db_card.difficulty,
-            elapsed_days=db_card.elapsed_days,
-            scheduled_days=db_card.scheduled_days,
-        )
+class ReadUpdateDeleteCard(generics.RetrieveUpdateDestroyAPIView):
+    """this class is a generic view for getting , edetting and deleting a card"""
+
+    queryset = Card.objects.all()
+    serializer_class = CardSerializer
+
+class RetrieveCards(generics.ListAPIView):
+    """this class view will give all the retrieval methods React needs in one generic place """
+    serializer_class = CardSerializer
+    def get_queryset(self): 
+        # if im filtering for a user :
+        # user = self.request.data.get("user_id")
+        # queryset = Card.objects.filter(user_id = user_id)
+        queryset = Card.objects.all()
+        requested_topic = self.request.query_params.get("topic") # type: ignore
+        requested_type = self.request.query_params.get("type") # type: ignore
+        requested_date = self.request.query_params.get("date") # type: ignore
+        requested_card_id = self.request.query_params.get("topic") # type: ignore
+        requested_exam = self.request.query_params.get("exam") # type : ignore
+        requested_review_type = self.request.query_params.get("review_type") # type : ignore 
+        requested_cards_by_difficulty = self.request.query_params.get("difficulty")
         
-    
-# -this is for creating the cards
-# create_card() -> run evaluations on the cards and then save to the database 
-# let the shedular give you the interval for studying 
-# - update card 
-# set  ratings and if the shedular is updated run every card in it to update there intervals too
-# - delete cards(id_card)
+        if requested_card_id.exist():
+            queryset = queryset.filter(id = requested_card_id)
+        if requested_topic:
+            queryset = queryset.filter(topic=requested_topic)
+
+        if requested_type:
+            queryset = queryset.filter(type=requested_type)
+
+        if requested_date:
+            queryset = queryset.filter(date=requested_date)
+
+        if requested_exam:
+            queryset = queryset.filter(exam=requested_exam)
+
+        if requested_review_type:
+            queryset = queryset.filter(review_type=requested_review_type)
+
+        if requested_cards_by_difficulty:
+            queryset = queryset.filter(difficulty=requested_cards_by_difficulty)
+            
+        return queryset
+        

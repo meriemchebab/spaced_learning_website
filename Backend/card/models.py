@@ -5,6 +5,7 @@ class Topic(models.Model):
     topic_name = models.CharField(max_length=50)
     subject = models.CharField(max_length=50)
     notes = models.TextField(blank=True)
+    
     def __str__(self) -> str:
         return self.topic_name
 
