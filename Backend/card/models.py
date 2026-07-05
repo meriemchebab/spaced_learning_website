@@ -114,3 +114,13 @@ class ReviewLog(models.Model):
     def __str__(self):
         return f"Log: {self.card_id} - {self.rating} at {self.review_datetime}"
     
+class Exam(models.Model):
+    exam_id = models.AutoField(primary_key=True)
+    exam_name = models.TextField()
+    # topic_id = models.ForeignKey(Topic,on_delete= models.CASCADE,related_name="topics")
+    topics = models.ManyToManyField(Topic,related_name="exams")
+    dead_line = models.DateField()
+    desired_retention = models.FloatField(default=0.9)
+    priority = models.FloatField(default=1)
+    def __str__(self):
+        return f"{self.exam_name}"
