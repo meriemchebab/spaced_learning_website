@@ -1,11 +1,18 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
+class User(models.Model):
+    user_id = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=50,default="user")
+    email = models.EmailField()
+    admin = models.BooleanField(default=False)
 class Topic(models.Model):
     id = models.BigAutoField(primary_key=True)
     topic_name = models.CharField(max_length=50)
     subject = models.CharField(max_length=50)
     notes = models.TextField(blank=True)
-    
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="topics",blank=True,null=True)
+    guest = models.CharField(max_length=100,null=True)
+
     def __str__(self) -> str:
         return self.topic_name
 
@@ -72,6 +79,9 @@ class Card(models.Model):
     lapses     = models.IntegerField(default=0)
     state = models.IntegerField(choices=FSRSState.choices, default=FSRSState.NEW)
     last_review = models.DateTimeField(null=True, blank=True)
+    # the user
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="cards",blank=True,null=True)
+    guest = models.CharField(max_length=100,null=True)
 
     def __str__(self):
         return self.question
@@ -117,6 +127,9 @@ class ReviewLog(models.Model):
     
 class Exam(models.Model):
     exam_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="exams",blank=True,null=True)
+    guest = models.CharField(max_length=100,null=True)
+
     exam_name = models.TextField()
     # topic_id = models.ForeignKey(Topic,on_delete= models.CASCADE,related_name="topics")
     topics = models.ManyToManyField(Topic,related_name="exams")
@@ -125,3 +138,83 @@ class Exam(models.Model):
     priority = models.FloatField(default=1)
     def __str__(self):
         return f"{self.exam_name}"
+    
+
+from datetime import timedelta
+from fsrs import Scheduler
+
+
+DEFAULT_PARAMETERS = [
+    0.212,
+    1.2931,
+    2.3065,
+    8.2956,
+    6.4133,
+    0.8334,
+    3.0194,
+    0.001,
+    1.8722,
+    0.1666,
+    0.796,
+    1.4835,
+    0.0614,
+    0.2629,
+    1.6483,
+    0.6014,
+    1.8729,
+    0.5425,
+    0.0912,
+    0.0658,
+    0.1542,
+]
+
+
+def default_parameters():
+    return DEFAULT_PARAMETERS.copy()
+
+
+def default_learning_steps():
+    return [60, 600]
+
+
+def default_relearning_steps():
+    return [600]
+
+
+class Scheduler_settings(models.Model):
+    """
+    stores the FSRS scheduler configuration in the database.
+    """
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="fsrs_settings",blank=True,null=True)
+    guest = models.CharField(max_length=100,null=True)
+    parameters = models.JSONField(
+        default=default_parameters,
+        help_text="FSRS parameter list used to initialize the scheduler.",
+    )
+    # add a forgein key to the user table
+    desired_retention = models.FloatField(default=0.9)
+    learning_steps = models.JSONField(default=default_learning_steps)
+    relearning_steps = models.JSONField(default=default_relearning_steps)
+    maximum_interval = models.IntegerField(default=36500)
+    enable_fuzzing = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    card_limit = models.IntegerField(default=None)
+    class Meta:
+        verbose_name = "FSRS Scheduler"
+        verbose_name_plural = "FSRS Schedulers"
+
+
+    def build_scheduler(self) -> Scheduler:
+        """
+        Create a live fsrs.Scheduler instance from this model record.
+        """
+        return Scheduler(
+            parameters=tuple(self.parameters),
+            desired_retention=self.desired_retention,
+            learning_steps=tuple(timedelta(seconds=s) for s in self.learning_steps),
+            relearning_steps=tuple(
+                timedelta(seconds=s) for s in self.relearning_steps
+            ),
+            maximum_interval=self.maximum_interval,
+            enable_fuzzing=self.enable_fuzzing,
+        )
