@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=Geist:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #F5F2EC;
+  --surface: #FFFFFF;
+  --surface2: #EEE9E1;
+  --surface3: #E8E2D9;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --text: #1C1A16;
+  --text2: #6A6560;
+  --text3: #A09990;
+  --purple: #5B4FD4;
+  --purple-l: #EEEDFE;
+  --purple-m: #AFA9EC;
+  --teal: #0F7B6C;
+  --teal-l: #E0F4F0;
+  --amber: #B5600A;
+  --amber-l: #FEF2E0;
+  --red: #BE3A2A;
+  --red-l: #FDECEA;
+  --blue: #1A68A8;
+  --blue-l: #E7F2FB;
+  --green: #2C7A50;
+  --green-l: #E6F4EE;
+  --r: 14px;
+  --r-sm: 8px;
+  --sh: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
+  --sh-md: 0 2px 6px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05);
+}

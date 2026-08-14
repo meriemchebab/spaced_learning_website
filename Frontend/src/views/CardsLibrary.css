@@ -1,0 +1,124 @@
+.page-cards {
+  padding: 10px 0;
+}
+
+.cards-filter-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  width: fit-content;
+}
+
+.tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text2);
+  font-family: 'Geist', sans-serif;
+  transition: all .12s;
+  text-transform: capitalize;
+}
+
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.topic-select-filter {
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  cursor: pointer;
+  outline: none;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.study-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  box-shadow: var(--sh);
+  cursor: pointer;
+  transition: all .18s;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.study-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-md);
+}
+
+.sc-type-bar {
+  height: 2px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+
+.card-item-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.attachment-icon {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.sc-q {
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Lora', serif;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  flex: 1;
+}
+
+.card-item-topic-name {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.sc-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.sc-ret {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+}

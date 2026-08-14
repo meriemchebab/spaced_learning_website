@@ -1,0 +1,185 @@
+.flashcard-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 560px;
+  min-height: 440px;
+  margin: 0 auto;
+}
+
+.flashcard {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh-md);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.flashcard-body {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-type-bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+
+.sc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.session-q {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+
+.session-hint-container, .answer-section {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.session-hint-title, .answer-label {
+  font-size: 10.5px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 5px;
+  letter-spacing: 0.05em;
+}
+
+.session-hint, .answer-content {
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.has-file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--teal-l);
+  color: var(--teal);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  align-self: flex-start;
+  margin-bottom: 16px;
+  font-family: 'DM Mono', monospace;
+  border: 1px solid rgba(15, 123, 108, 0.15);
+}
+
+.flashcard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.flashcard-footer button {
+  flex: 1;
+}
+
+.flashcard-footer button + button {
+  margin-left: 12px;
+}
+
+.flashcard-footer-feedback {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.feedback-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.fb-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.fb-btn {
+  padding: 12px 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Geist', sans-serif;
+  transition: all 0.13s;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.fb-btn:hover {
+  transform: translateY(-2px);
+}
+
+.fb-hard { color: var(--red); }
+.fb-hard:hover { background: var(--red-l); border-color: var(--red); }
+
+.fb-good { color: var(--amber); }
+.fb-good:hover { background: var(--amber-l); border-color: var(--amber); }
+
+.fb-easy { color: var(--green); }
+.fb-easy:hover { background: var(--green-l); border-color: var(--green); }
+
+.fb-sub {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+  font-family: 'DM Mono', monospace;
+}

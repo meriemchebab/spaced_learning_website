@@ -1,0 +1,32 @@
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.stat-label {
+  font-size: 10.5px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 5px;
+}
+
+.stat-val {
+  font-size: 25px;
+  font-weight: 300;
+  color: var(--text);
+  font-family: 'Lora', serif;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+}

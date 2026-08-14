@@ -1,0 +1,19 @@
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.b-purple { background: var(--purple-l); color: var(--purple); }
+.b-teal { background: var(--teal-l); color: var(--teal); }
+.b-amber { background: var(--amber-l); color: var(--amber); }
+.b-red { background: var(--red-l); color: var(--red); }
+.b-blue { background: var(--blue-l); color: var(--blue); }
+.b-green { background: var(--green-l); color: var(--green); }
+.b-gray { background: var(--surface2); color: var(--text2); }

@@ -2,12 +2,16 @@ from rest_framework import serializers
 from .models import Card,Topic,Exam
 
 class CardSerializer(serializers.ModelSerializer):
-    topic_name = serializers.StringRelatedField(source = Topic,read_only=True)
+    topic_name = serializers.CharField(source='topic.topic_name', read_only=True)
+    image = serializers.ImageField(required=False, allow_null=True)
+    attached_file = serializers.FileField(required=False, allow_null=True)
+    audio = serializers.FileField(required=False, allow_null=True)
+
     class Meta:
         model = Card
-        feilds = [
-            'id', 'question', 'answer', 'topic','topic_name', 'image', 'card_type',
-                'review_method', 'attached_file', 'audio', 'context_hint', 'due'
+        fields = [
+            'id', 'question', 'answer', 'topic', 'topic_name', 'image', 'card_type',
+            'review_method', 'attached_file', 'audio', 'context_hint', 'due'
         ]
     def validate_qst(self,value : str):
         if(len(value))<5:
@@ -19,11 +23,12 @@ class CardSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"answer": "The answer cannot be identical to the question."})
         return data
 class TopicSerializer(serializers.ModelSerializer):
-    exam_name = serializers.StringRelatedField(many=True,read_only=True)
+    exam_name = serializers.StringRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Topic
         fields = [
-            'id', 'topic_name','subject','exam_name','note'
+            'id', 'topic_name', 'subject', 'notes', 'exam_name'
         ]
 from django.utils import timezone
 

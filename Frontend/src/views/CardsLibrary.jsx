@@ -1,0 +1,159 @@
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import TopicChip from '../components/ui/TopicChip';
+import Badge from '../components/ui/Badge';
+import './CardsLibrary.css';
+
+export const CardsLibrary = ({
+  initialTopicId = '',
+  onReviewCard
+}) => {
+  const [cards, setCards] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [filterType, setFilterType] = useState('all');
+  const [filterTopicId, setFilterTopicId] = useState(initialTopicId);
+  const [loading, setLoading] = useState(true);
+
+  // Sync with prop changes (e.g. navigation from topics grid)
+  useEffect(() => {
+    setFilterTopicId(initialTopicId);
+  }, [initialTopicId]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [allCards, allTopics] = await Promise.all([
+        api.fetchCards(),
+        api.fetchTopics()
+      ]);
+      setCards(allCards);
+      setTopics(allTopics);
+    } catch (err) {
+      console.error("Failed to load cards library:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const getRetEst = (card) => {
+    if (!card.lastReview) return 100;
+    const days = (Date.now() - card.lastReview) / 86400000;
+    const stab = card.interval * 1.4;
+    return Math.round(Math.max(0, Math.min(100, Math.exp(-days / stab) * 100)));
+  };
+
+  const retColor = r => r > 65 ? 'var(--green)' : r > 35 ? 'var(--amber)' : 'var(--red)';
+  const ctypeBarColors = {
+    exercise: 'var(--amber)',
+    concept: 'var(--purple)',
+    mistake: 'var(--red)',
+    question: 'var(--blue)',
+    note: 'var(--green)'
+  };
+
+  const filteredCards = cards.filter(c => {
+    if (filterType !== 'all' && c.ctype !== filterType) return false;
+    if (filterTopicId && c.topicId !== filterTopicId) return false;
+    return true;
+  });
+
+  const isDue = (card) => {
+    return !card.nextReview || Date.now() >= card.nextReview;
+  };
+
+  if (loading) {
+    return <div className="loading-state">Loading cards library...</div>;
+  }
+
+  const tabs = ['all', 'exercise', 'concept', 'mistake', 'question', 'note'];
+
+  return (
+    <div className="page-cards">
+      {/* Filtering Header */}
+      <div className="cards-filter-header">
+        <div className="tabs">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              className={`tab ${filterType === tab ? 'active' : ''}`}
+              onClick={() => setFilterType(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        
+        <select 
+          value={filterTopicId} 
+          onChange={(e) => setFilterTopicId(e.target.value)}
+          className="topic-select-filter"
+        >
+          <option value="">All topics</option>
+          {topics.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Cards Grid */}
+      <div className="cards-grid">
+        {filteredCards.length === 0 ? (
+          <div className="empty" style={{ gridColumn: '1 / -1', padding: '60px 0' }}>
+            <div className="e-icon">🃏</div>
+            <div className="e-title">No cards found</div>
+            <div className="e-sub">Capture notes or concepts using the "+ Card" button.</div>
+          </div>
+        ) : (
+          filteredCards.map(c => {
+            const topic = topics.find(t => t.id === c.topicId);
+            const ret = getRetEst(c);
+            const due = isDue(c);
+            
+            return (
+              <div 
+                key={c.id} 
+                className="study-card"
+                onClick={() => {
+                  if (onReviewCard) {
+                    onReviewCard({
+                      ...c,
+                      topicName: topic ? topic.name : 'No topic',
+                      retention: ret
+                    });
+                  }
+                }}
+              >
+                <div 
+                  className="sc-type-bar" 
+                  style={{ background: ctypeBarColors[c.ctype] || 'var(--text3)' }} 
+                />
+                
+                <div className="card-item-meta-row">
+                  <TopicChip type={c.ctype} />
+                  {due && <Badge variant="red">due</Badge>}
+                  {c.hasFile && <span className="attachment-icon">📎</span>}
+                </div>
+                
+                <div className="sc-q">{c.question}</div>
+                {topic && <div className="card-item-topic-name">{topic.name}</div>}
+                
+                <div className="sc-meta-row">
+                  <Badge variant="blue">{c.method}</Badge>
+                  <span className="sc-ret" style={{ color: retColor(ret) }}>
+                    {ret}% retention
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CardsLibrary;

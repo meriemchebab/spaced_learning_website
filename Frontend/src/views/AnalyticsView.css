@@ -1,0 +1,48 @@
+.page-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.analytics-grid-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.analytics-card {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+}
+
+.analytics-card .card-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.analytics-chart-wrap {
+  height: 180px;
+  position: relative;
+  width: 100%;
+}
+
+.analytics-chart-wrap.short-wrap {
+  height: 150px;
+}
+
+.full-width-card {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .analytics-grid-top {
+    grid-template-columns: 1fr;
+  }
+}

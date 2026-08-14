@@ -1,0 +1,17 @@
+.ctype {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: lowercase;
+}
+
+.ct-exercise { background: #FEF2E0; color: #B5600A; }
+.ct-concept  { background: #EEEDFE; color: #5B4FD4; }
+.ct-mistake  { background: #FDECEA; color: #BE3A2A; }
+.ct-question { background: #E7F2FB; color: #1A68A8; }
+.ct-note     { background: #E6F4EE; color: #2C7A50; }

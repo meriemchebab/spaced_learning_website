@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-wf5x!$%zb3#u5jt8^394tib6(4d&y!z4vgssf%2to-f%88w-h9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'testserver',
+]
 
 
 # Application definition
@@ -34,7 +38,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'card',
-    'scheduler',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -122,8 +125,16 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'guest_id',
+    'guest-id',
+    'x-guest-id',
 ]
 
 REST_FRAMEWORK = {

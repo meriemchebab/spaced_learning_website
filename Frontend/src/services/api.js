@@ -1,14 +1,33 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
+function getStoredToken() {
+  return localStorage.getItem('recall_token');
+}
+
+function getStoredGuestId() {
+  return localStorage.getItem('recall_guest_id') || 'guest-demo';
+}
+
 function getAuthHeaders() {
-  const token = localStorage.getItem('recall_token');
-  const guestId = localStorage.getItem('recall_guest_id') || 'guest-demo';
+  const token = getStoredToken();
+  const guestId = getStoredGuestId();
   return {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     Guest_ID: guestId,
     'Content-Type': 'application/json'
   };
+}
+
+async function parseResponse(response) {
+  if (response.status === 204) return null;
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return response.text();
 }
 
 async function request(path, options = {}) {
@@ -22,8 +41,7 @@ async function request(path, options = {}) {
     throw new Error(errorText || `Request failed with status ${response.status}`);
   }
 
-  if (response.status === 204) return null;
-  return response.json();
+  return parseResponse(response);
 }
 
 function normalizeTopic(topic) {
@@ -53,6 +71,18 @@ function normalizeCard(card) {
     ef: card.ef ?? 2.5,
     reps: card.reps ?? 0
   };
+}
+
+function toBackendCardType(cardType) {
+  const map = {
+    exercise: 'EX',
+    mistake: 'MI',
+    concept: 'CO',
+    note: 'NO',
+    question: 'QU'
+  };
+
+  return map[String(cardType || '').toLowerCase()] || 'QU';
 }
 
 export const api = {
@@ -146,7 +176,6 @@ export const api = {
     return filtered.sort(() => Math.random() - 0.5).map((card) => ({
       id: card.id,
       question: card.question,
-      question: card.question,
       hint: card.hint,
       topicId: card.topicId,
       topicName: 'Card',
@@ -169,7 +198,13 @@ export const api = {
       throw new Error(errorText || 'Could not submit review');
     }
 
-    return { success: true, cardId, rating };
+    const result = await parseResponse(response);
+    return {
+      success: true,
+      cardId,
+      rating,
+      message: typeof result === 'string' ? result : result?.detail || 'Review submitted'
+    };
   },
 
   fetchTopics: async () => {
@@ -180,9 +215,17 @@ export const api = {
   addTopic: async (name, tag, notes) => {
     const topic = await request('/api/topics/', {
       method: 'POST',
-      body: JSON.stringify({ topic_name: name, subject: tag, notes })
+      body: JSON.stringify({
+        topic_name: String(name || '').trim(),
+        subject: String(tag || '').trim(),
+        notes: String(notes || '').trim()
+      })
     });
     return normalizeTopic(topic);
+  },
+
+  fetchAnalytics: async () => {
+    return request('/api/analytics/');
   },
 
   fetchCards: async () => {
@@ -195,7 +238,7 @@ export const api = {
       question: cardData.question,
       answer: cardData.hint || 'Added from frontend',
       topic: cardData.topicId,
-      card_type: cardData.ctype.toUpperCase().slice(0, 2),
+      card_type: toBackendCardType(cardData.ctype),
       review_method: cardData.method,
       context_hint: cardData.hint,
       attached_file: null

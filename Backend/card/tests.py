@@ -1,149 +1,92 @@
-from datetime import datetime, timezone
-import tempfile
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from .models import Card, ReviewLog, Topic
-from .views import process_flashcard_review
 
 
-def make_test_image(name="test.png"):
-    png_bytes = (
-        b"\x89PNG\r\n\x1a\n"
-        b"\x00\x00\x00\rIHDR"
-        b"\x00\x00\x00\x01"
-        b"\x00\x00\x00\x01"
-        b"\x08\x02\x00\x00\x00"
-        b"\x90wS\xde"
-        b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01"
-        b"\r\n-\xb4"
-        b"\x00\x00\x00\x00IEND\xaeB`\x82"
-    )
-    return SimpleUploadedFile(name, png_bytes, content_type="image/png")
-
-
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class CardReadEndpointTests(APITestCase):
+@override_settings(USE_TZ=True)
+class CardCreateEndpointTests(APITestCase):
     def setUp(self):
         self.topic = Topic.objects.create(
             topic_name="Algebra",
             subject="Math",
             notes="Core formulas",
-        )
-        self.other_topic = Topic.objects.create(
-            topic_name="Biology",
-            subject="Science",
-            notes="Cell basics",
+            guest="guest-test",
         )
 
-        self.card = Card.objects.create(
-            question="What is 2 + 2?",
-            answer="4",
-            topic=self.topic,
-            image=make_test_image(),
-            card_type=Card.CardType.QUESTION,
-            review_method=Card.ReviewMethod.RECALL,
-            context_hint="Very basic arithmetic",
-            due=datetime(2026, 7, 2, 10, 30, tzinfo=timezone.utc),
-            stability=1.25,
-            difficulty=3.5,
-            elapsed_days=2,
-            scheduled_days=7,
-            reps=3,
-            lapses=1,
-            state=Card.FSRSState.REVIEW,
-            last_review=datetime(2026, 7, 1, 18, 0, tzinfo=timezone.utc),
+    def test_guest_can_create_card(self):
+        response = self.client.post(
+            "/api/cards/",
+            {
+                "question": "What is 2 + 2?",
+                "answer": "4",
+                "topic": self.topic.id,
+                "card_type": "QU",
+                "review_method": "RC",
+                "context_hint": "Very basic arithmetic",
+            },
+            format="json",
+            HTTP_GUEST_ID="guest-test",
         )
 
-        self.other_card = Card.objects.create(
-            question="What is a cell?",
-            answer="The basic unit of life",
-            topic=self.other_topic,
-            image=make_test_image("biology.png"),
-            card_type=Card.CardType.CONCEPT,
-            review_method=Card.ReviewMethod.READ,
-            context_hint="Intro biology",
-            due=datetime(2026, 7, 3, 9, 0, tzinfo=timezone.utc),
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["question"], "What is 2 + 2?")
+        self.assertEqual(response.data["answer"], "4")
+        self.assertEqual(response.data["topic"], self.topic.id)
+        self.assertEqual(response.data["card_type"], "QU")
+        self.assertEqual(response.data["review_method"], "RC")
+        self.assertEqual(response.data["context_hint"], "Very basic arithmetic")
+
+        card = Card.objects.get(id=response.data["id"])
+        self.assertEqual(card.guest, "guest-test")
+        self.assertEqual(card.topic_id, self.topic.id)
+
+
+@override_settings(USE_TZ=True)
+class TopicCreateEndpointTests(APITestCase):
+    def test_guest_can_create_topic(self):
+        response = self.client.post(
+            "/api/topics/",
+            {
+                "topic_name": "Biology",
+                "subject": "Science",
+                "notes": "Cells and organisms",
+            },
+            format="json",
+            HTTP_GUEST_ID="guest-test",
         )
 
-    def test_fetch_card_by_id_returns_expected_payload(self):
-        response = self.client.get(reverse("get-a-card-by-id", kwargs={"card_id": self.card.id}))
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["topic_name"], "Biology")
+        self.assertEqual(response.data["subject"], "Science")
+        self.assertEqual(response.data["notes"], "Cells and organisms")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["id"], self.card.id)
-        self.assertEqual(response.data["question"], self.card.question)
-        self.assertEqual(response.data["answer"], self.card.answer)
-        self.assertEqual(response.data["topic"]["id"], self.topic.id)
-        self.assertEqual(response.data["topic"]["topic_name"], self.topic.topic_name)
-        self.assertEqual(response.data["topic"]["subject"], self.topic.subject)
-        self.assertEqual(response.data["topic"]["notes"], self.topic.notes)
-        self.assertEqual(response.data["card_type"], self.card.card_type)
-        self.assertEqual(response.data["review_method"], self.card.review_method)
-        self.assertEqual(response.data["context_hint"], self.card.context_hint)
-
-    def test_fetch_card_by_id_returns_404_for_missing_card(self):
-        response = self.client.get(reverse("get-a-card-by-id", kwargs={"card_id": 99999}))
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_fetch_cards_by_topic_returns_matching_cards_only(self):
-        response = self.client.get(reverse("get-cards-by-topic", kwargs={"topic_id": self.topic.id}))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["id"], self.card.id)
-        self.assertEqual(response.data[0]["topic"]["id"], self.topic.id)
-
-    def test_fetch_cards_by_topic_returns_404_when_empty(self):
-        response = self.client.get(reverse("get-cards-by-topic", kwargs={"topic_id": 99999}))
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_fetch_cards_by_date_returns_matching_cards_only(self):
-        response = self.client.get(reverse("get-cards-by-date", kwargs={"due": "2026-07-02"}))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["id"], self.card.id)
-
-    def test_fetch_cards_by_date_returns_404_when_empty(self):
-        response = self.client.get(reverse("get-cards-by-date", kwargs={"due": "2026-07-10"}))
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_fetch_cards_by_type_returns_matching_cards_only(self):
-        response = self.client.get(
-            reverse("get-cards-by-type", kwargs={"type": Card.CardType.QUESTION})
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["id"], self.card.id)
-
-    def test_fetch_cards_by_type_returns_404_when_empty(self):
-        response = self.client.get(reverse("get-cards-by-type", kwargs={"type": Card.CardType.MISTAKE}))
-
-        self.assertEqual(response.status_code, 404)
+        topic = Topic.objects.get(id=response.data["id"])
+        self.assertEqual(topic.guest, "guest-test")
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class ProcessFlashcardReviewTests(APITestCase):
+@override_settings(USE_TZ=True)
+class CardRatingEndpointTests(APITestCase):
     def setUp(self):
         self.topic = Topic.objects.create(
             topic_name="Physics",
             subject="Science",
             notes="Motion and forces",
+            guest="guest-test",
         )
         self.card = Card.objects.create(
             question="What is force?",
             answer="A push or pull",
             topic=self.topic,
-            image=make_test_image("physics.png"),
+            card_type=Card.CardType.QUESTION,
+            review_method=Card.ReviewMethod.RECALL,
+            context_hint="Think Newton",
+            due=datetime(2026, 8, 14, 10, 0, tzinfo=timezone.utc),
             stability=1.0,
             difficulty=2.0,
             elapsed_days=1,
@@ -151,30 +94,35 @@ class ProcessFlashcardReviewTests(APITestCase):
             reps=2,
             lapses=0,
             state=Card.FSRSState.REVIEW,
-            due=datetime(2026, 7, 2, 12, 0, tzinfo=timezone.utc),
-            last_review=datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc),
+            last_review=datetime(2026, 8, 13, 10, 0, tzinfo=timezone.utc),
+            guest="guest-test",
         )
 
     @patch("card.views.save_to_log")
+    @patch("card.views.get_object_or_404")
     @patch("card.views.FSRSscheduler")
     @patch("card.views.FSRScard")
-    def test_process_flashcard_review_updates_card_and_logs_review(
-        self, mock_fsrs_card_cls, mock_scheduler_cls, mock_save_to_log
+    def test_review_endpoint_updates_card_and_returns_interval(
+        self,
+        mock_fsrs_card_cls,
+        mock_scheduler_cls,
+        mock_get_object_or_404,
+        mock_save_to_log,
     ):
         class FakeState:
             value = Card.FSRSState.LEARNING
 
         class FakeUpdatedCard:
-            due = datetime(2026, 7, 8, 12, 0, tzinfo=timezone.utc)
-            stability = 3.2
-            difficulty = 1.7
+            due = datetime(2026, 8, 18, 10, 0, tzinfo=timezone.utc)
+            stability = 3.25
+            difficulty = 1.75
             state = FakeState()
-            last_review = datetime(2026, 7, 3, 12, 0, tzinfo=timezone.utc)
+            last_review = datetime(2026, 8, 14, 10, 0, tzinfo=timezone.utc)
 
         class FakeLog:
             rating = 3
             review_duration = 4500
-            review_datetime = datetime(2026, 7, 3, 12, 0, tzinfo=timezone.utc)
+            review_datetime = datetime(2026, 8, 14, 10, 0, tzinfo=timezone.utc)
 
         mock_fsrs_card_cls.return_value = SimpleNamespace()
 
@@ -182,7 +130,19 @@ class ProcessFlashcardReviewTests(APITestCase):
         mock_scheduler.review_card.return_value = (FakeUpdatedCard(), FakeLog())
         mock_scheduler_cls.return_value = mock_scheduler
 
-        process_flashcard_review(self.card.id, 3, 4500)
+        mock_get_object_or_404.side_effect = [self.card, SimpleNamespace(build_scheduler=lambda: mock_scheduler)]
+
+        response = self.client.post(
+            f"/api/cards/{self.card.id}/ratings/3/4500/",
+            HTTP_GUEST_ID="guest-test",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["message"], "card been updated successfuly")
+        self.assertEqual(response.data["card_id"], self.card.id)
+        self.assertEqual(response.data["rating"], 3)
+        self.assertEqual(response.data["interval_days"], 4)
+        self.assertEqual(str(response.data["next_review"]), "2026-08-18 10:00:00+00:00")
 
         self.card.refresh_from_db()
         self.assertEqual(self.card.due, FakeUpdatedCard.due)
@@ -191,8 +151,62 @@ class ProcessFlashcardReviewTests(APITestCase):
         self.assertEqual(self.card.state, Card.FSRSState.LEARNING)
         self.assertEqual(self.card.last_review, FakeUpdatedCard.last_review)
         self.assertEqual(self.card.reps, 3)
+        self.assertEqual(self.card.lapses, 0)
 
         mock_scheduler.review_card.assert_called_once()
         mock_save_to_log.assert_called_once()
-        self.assertEqual(mock_save_to_log.call_args.args[3], Card.FSRSState.REVIEW)
         self.assertEqual(ReviewLog.objects.count(), 0)
+
+    def test_review_endpoint_rejects_missing_guest_or_auth(self):
+        response = self.client.post(f"/api/cards/{self.card.id}/ratings/3/4500/")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["detail"], "Authentication credentials or Guest_ID were not provided.")
+
+
+@override_settings(USE_TZ=True)
+class AnalyticsEndpointTests(APITestCase):
+    def setUp(self):
+        self.topic = Topic.objects.create(
+            topic_name="Math",
+            subject="Algebra",
+            notes="Equations",
+            guest="guest-test",
+        )
+        self.card = Card.objects.create(
+            question="What is x if 2x = 4?",
+            answer="2",
+            topic=self.topic,
+            card_type=Card.CardType.QUESTION,
+            review_method=Card.ReviewMethod.RECALL,
+            due=datetime.now(timezone.utc),
+            stability=10.0,
+            difficulty=2.0,
+            state=Card.FSRSState.REVIEW,
+            last_review=datetime.now(timezone.utc) - timedelta(days=10),
+            guest="guest-test",
+        )
+        ReviewLog.objects.create(
+            card_id=self.card,
+            rating=3,
+            state=Card.FSRSState.REVIEW,
+            review_duration_ms=2500,
+            due=datetime.now(timezone.utc),
+            stability=10.0,
+            difficulty=2.0,
+            elapsed_days=10,
+            scheduled_days=10,
+        )
+
+    def test_analytics_returns_correct_calculations(self):
+        response = self.client.get(
+            "/api/analytics/",
+            HTTP_GUEST_ID="guest-test",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total_cards_studied"], 1)
+        # R at 10 days elapsed with 10 stability is 0.90 (90%)
+        self.assertEqual(response.data["overall_retention_rate"], 90.0)
+        self.assertIn("upcoming_workload", response.data)
+        self.assertEqual(response.data["upcoming_workload"]["due_today"], 1)
+

@@ -1,0 +1,266 @@
+.page-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.list-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.interleave-banner {
+  background: var(--purple-l);
+  border: 1px solid var(--purple-m);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--purple);
+  margin: 12px 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.review-list {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .13s;
+  border: 1px solid transparent;
+  margin-bottom: 3px;
+  text-align: left;
+}
+
+.review-item:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+
+.r-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.r-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.r-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.r-meta {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.r-ret {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'DM Mono', monospace;
+  flex-shrink: 0;
+}
+
+.upcoming-list {
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.upcoming-item:last-child {
+  border-bottom: none;
+}
+
+.upcoming-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.upcoming-q {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text3);
+}
+
+.e-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+  opacity: .5;
+}
+
+.e-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 5px;
+}
+
+.e-sub {
+  font-size: 12px;
+}
+
+.empty-sub {
+  text-align: center;
+  padding: 24px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text3);
+  font-size: 14px;
+}
+
+/* Modals styling matching prototype */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 14, 0.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s;
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--sh-md);
+  width: 580px;
+  max-width: 95vw;
+  max-height: 88vh;
+  overflow-y: auto;
+  transform: translateY(8px);
+  transition: transform .18s;
+}
+
+.overlay.open .modal {
+  transform: translateY(0);
+}
+
+.m-head {
+  padding: 22px 22px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.m-title {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.m-body {
+  padding: 18px 22px 22px;
+}
+
+.close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .12s;
+}
+
+.close-btn:hover {
+  background: var(--surface3);
+}
+
+@media (max-width: 1024px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
