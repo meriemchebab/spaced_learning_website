@@ -39,7 +39,20 @@ export const Dashboard = ({ onReviewSubmitted }) => {
     try {
       await api.submitCardReview(cardId, rating);
       setActiveReviewCard(null);
-      loadStats(); // Reload stats after review
+      setStats((prevStats) => {
+        if (!prevStats) return prevStats;
+
+        const nextDueCards = (prevStats.dueCards || []).filter((card) => card.id !== cardId);
+        const nextUpcomingCards = (prevStats.upcomingCards || []).filter((card) => card.id !== cardId);
+
+        return {
+          ...prevStats,
+          dueCount: Math.max(0, (prevStats.dueCount || 0) - 1),
+          dueCards: nextDueCards,
+          upcomingCards: nextUpcomingCards
+        };
+      });
+
       if (onReviewSubmitted) onReviewSubmitted();
     } catch (err) {
       console.error("Error submitting review:", err);

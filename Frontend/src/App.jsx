@@ -18,6 +18,7 @@ function App() {
   
   // App-wide data
   const [topics, setTopics] = useState([]);
+  const [exams, setExams] = useState([]);
   const [cards, setCards] = useState([]);
   const [history, setHistory] = useState([]);
   const [streak, setStreak] = useState(3);
@@ -57,11 +58,15 @@ function App() {
 
   const loadData = async () => {
     try {
-      const allTopics = await api.fetchTopics();
-      const allCards = await api.fetchCards();
+      const [allTopics, allExams, allCards] = await Promise.all([
+        api.fetchTopics(),
+        api.fetchExams(),
+        api.fetchCards()
+      ]);
       const stats = await api.fetchDashboardStats();
       
       setTopics(allTopics);
+      setExams(allExams);
       setCards(allCards);
       setHistory(stats.history || []);
       setStreak(stats.streak || 3);
@@ -107,15 +112,11 @@ function App() {
       addToast('Enter a question or description');
       return;
     }
-    if (!cardTopicId) {
-      addToast('Pick a topic first');
-      return;
-    }
     try {
       await api.addCard({
         question: cardQuestion.trim(),
         hint: cardHint.trim(),
-        topicId: Number(cardTopicId),
+        topicId: cardTopicId ? Number(cardTopicId) : null,
         ctype: cardCtype,
         method: cardMethod,
         fileName: cardAttachedFile ? cardAttachedFile.name : null
@@ -127,7 +128,7 @@ function App() {
       setCardQuestion('');
       setCardHint('');
       setCardTopicId('');
-      setCardCtype('exercise');
+      setCardCtype('');
       setCardMethod('RECALL');
       setCardAttachedFile(null);
 
@@ -177,7 +178,7 @@ function App() {
           />
         );
       case 'calendar':
-        return <CalendarGrid cards={cards} topics={topics} history={history} />;
+        return <CalendarGrid cards={cards} topics={topics} exams={exams} history={history} />;
       case 'topics':
         return (
           <TopicsLibrary 
@@ -328,7 +329,7 @@ function App() {
 
       {/* ADD CARD MODAL */}
       {isAddCardOpen && (
-        <div className="overlay open" onClick={() => setIsAddCardOpen(false)}>
+      <div className="overlay open" onClick={() => setIsAddCardOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="m-head">
               <div className="m-title">Capture a card</div>
@@ -338,7 +339,7 @@ function App() {
               <div className="field">
                 <label>Topic</label>
                 <select value={cardTopicId} onChange={(e) => setCardTopicId(e.target.value)}>
-                  <option value="">— no topic —</option>
+                  <option value="">No topic</option>
                   {topics.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}

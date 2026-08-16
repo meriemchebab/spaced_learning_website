@@ -3,6 +3,7 @@ from .models import Card,Topic,Exam
 
 class CardSerializer(serializers.ModelSerializer):
     topic_name = serializers.CharField(source='topic.topic_name', read_only=True)
+    ctype = serializers.CharField(source='card_type', read_only=True)
     image = serializers.ImageField(required=False, allow_null=True)
     attached_file = serializers.FileField(required=False, allow_null=True)
     audio = serializers.FileField(required=False, allow_null=True)
@@ -10,9 +11,12 @@ class CardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Card
         fields = [
-            'id', 'question', 'answer', 'topic', 'topic_name', 'image', 'card_type',
+            'id', 'question', 'answer', 'topic', 'topic_name', 'image', 'card_type', 'ctype',
             'review_method', 'attached_file', 'audio', 'context_hint', 'due'
         ]
+        extra_kwargs = {
+            'topic': {'required': False, 'allow_null': True}
+        }
     def validate_qst(self,value : str):
         if(len(value))<5:
             raise serializers.ValidationError("the question is too smol to be valide")

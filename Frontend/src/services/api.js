@@ -14,7 +14,7 @@ function getAuthHeaders() {
   const guestId = getStoredGuestId();
   return {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    Guest_ID: guestId,
+    Guest: guestId,
     'Content-Type': 'application/json'
   };
 }
@@ -54,14 +54,33 @@ function normalizeTopic(topic) {
   };
 }
 
+function normalizeExam(exam) {
+  return {
+    id: exam.exam_id ?? exam.id,
+    name: exam.exam_name || exam.name || `Exam ${exam.exam_id ?? exam.id}`,
+    topics: Array.isArray(exam.topics) ? exam.topics.map(Number) : [],
+    deadLine: exam.dead_line || exam.deadLine || null,
+    desiredRetention: exam.desired_retention ?? exam.desiredRetention ?? 0.9,
+    priority: exam.priority ?? 1
+  };
+}
+
 function normalizeCard(card) {
+  const reviewMethodMap = {
+    RC: 'RECALL',
+    TS: 'TEST',
+    RD: 'READ',
+    WT: 'WATCH'
+  };
+  const rawTopicId = card.topic?.id ?? card.topic_id ?? null;
+
   return {
     id: card.id,
     question: card.question,
     hint: card.context_hint || card.hint || '',
-    topicId: card.topic?.id ?? card.topic_id ?? null,
+    topicId: rawTopicId !== null && rawTopicId !== undefined ? Number(rawTopicId) : null,
     ctype: card.card_type?.toLowerCase() || card.ctype || 'question',
-    method: card.review_method || card.method || 'RECALL',
+    method: reviewMethodMap[String(card.review_method || card.method || 'RC').toUpperCase()] || 'RECALL',
     hasFile: Boolean(card.attached_file || card.fileName),
     fileName: card.attached_file || card.fileName || null,
     retention: card.retention ?? 100,
@@ -83,6 +102,21 @@ function toBackendCardType(cardType) {
   };
 
   return map[String(cardType || '').toLowerCase()] || 'QU';
+}
+
+function toBackendReviewMethod(method) {
+  const map = {
+    recall: 'RC',
+    test: 'TS',
+    read: 'RD',
+    watch: 'WT',
+    rc: 'RC',
+    ts: 'TS',
+    rd: 'RD',
+    wt: 'WT'
+  };
+
+  return map[String(method || '').toLowerCase()] || 'RC';
 }
 
 export const api = {
@@ -169,22 +203,32 @@ export const api = {
   },
 
   fetchDailyStudyPlan: async (topicId = null) => {
-    const cards = await request('/api/cards/');
-    const normalizedCards = (cards || []).map(normalizeCard);
-    const dueCards = normalizedCards.filter((card) => !card.nextReview || Date.now() >= card.nextReview);
-    const filtered = topicId ? dueCards.filter((card) => card.topicId === topicId) : dueCards;
-    return filtered.sort(() => Math.random() - 0.5).map((card) => ({
-      id: card.id,
-      question: card.question,
-      hint: card.hint,
-      topicId: card.topicId,
-      topicName: 'Card',
-      ctype: card.ctype,
-      method: card.method,
-      hasFile: card.hasFile,
-      fileName: card.fileName,
-      retention: card.retention ?? 100
-    }));
+    const params = new URLSearchParams();
+    if (topicId !== null && topicId !== undefined && topicId !== '') {
+      params.append('topic', topicId);
+    }
+
+    try {
+      const cards = await request(`/api/cards/today/${params.toString() ? `?${params.toString()}` : ''}`);
+      const normalizedCards = (cards || []).map(normalizeCard);
+      return normalizedCards.sort(() => Math.random() - 0.5).map((card) => ({
+        id: card.id,
+        question: card.question,
+        hint: card.hint,
+        topicId: card.topicId,
+        topicName: 'Card',
+        ctype: card.ctype,
+        method: card.method,
+        hasFile: card.hasFile,
+        fileName: card.fileName,
+        retention: card.retention ?? 100
+      }));
+    } catch (err) {
+      if (!String(err?.message || '').includes('404')) {
+        throw err;
+      }
+      return [];
+    }
   },
 
   submitCardReview: async (cardId, rating) => {
@@ -212,6 +256,11 @@ export const api = {
     return (topics || []).map(normalizeTopic);
   },
 
+  fetchExams: async () => {
+    const exams = await request('/api/exams/');
+    return (exams || []).map(normalizeExam);
+  },
+
   addTopic: async (name, tag, notes) => {
     const topic = await request('/api/topics/', {
       method: 'POST',
@@ -228,8 +277,21 @@ export const api = {
     return request('/api/analytics/');
   },
 
-  fetchCards: async () => {
-    const cards = await request('/api/cards/');
+  fetchCards: async (filters = {}) => {
+    const params = new URLSearchParams();
+
+    if (filters.topicId !== undefined && filters.topicId !== null && filters.topicId !== '') {
+      params.append('topic', filters.topicId);
+    }
+    if (filters.type) params.append('type', toBackendCardType(filters.type));
+    if (filters.difficulty) params.append('difficulty', filters.difficulty);
+    if (filters.reviewType) params.append('review_type', filters.reviewType);
+    if (filters.date) params.append('date', filters.date);
+    if (filters.examId) params.append('exam', filters.examId);
+    if (filters.cardId) params.append('id', filters.cardId);
+
+    const queryString = params.toString();
+    const cards = await request(`/api/cards/${queryString ? `?${queryString}` : ''}`);
     return (cards || []).map(normalizeCard);
   },
 
@@ -237,9 +299,9 @@ export const api = {
     const payload = {
       question: cardData.question,
       answer: cardData.hint || 'Added from frontend',
-      topic: cardData.topicId,
-      card_type: toBackendCardType(cardData.ctype),
-      review_method: cardData.method,
+      ...(cardData.topicId !== undefined && cardData.topicId !== null && cardData.topicId !== '' ? { topic: cardData.topicId } : {}),
+      ...(cardData.ctype ? { card_type: toBackendCardType(cardData.ctype) } : {}),
+      review_method: toBackendReviewMethod(cardData.method),
       context_hint: cardData.hint,
       attached_file: null
     };

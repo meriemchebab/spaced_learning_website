@@ -19,11 +19,13 @@ const MONTHS = [
 export const CalendarGrid = ({
   cards = [],
   topics = [],
+  exams = [],
   history = []
 }) => {
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDayTs, setSelectedDayTs] = useState(null);
   const [selectedDayLabel, setSelectedDayLabel] = useState('');
+  const [selectedExamId, setSelectedExamId] = useState('');
 
   const now = new Date();
   const targetDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -36,6 +38,11 @@ export const CalendarGrid = ({
   const daysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
   
   const today = new Date();
+  const selectedExam = exams.find((exam) => String(exam.id) === String(selectedExamId));
+  const examTopicIds = selectedExam ? new Set((selectedExam.topics || []).map(Number)) : null;
+  const visibleCards = selectedExam
+    ? cards.filter((card) => examTopicIds.has(Number(card.topicId)))
+    : cards;
 
   // Create cell data
   const cells = [];
@@ -55,12 +62,12 @@ export const CalendarGrid = ({
     const dayEnd = dayStart + 86400000;
 
     // Cards scheduled specifically for this day
-    const dueCards = cards.filter(c => c.nextReview && c.nextReview >= dayStart && c.nextReview < dayEnd);
+    const dueCards = visibleCards.filter(c => c.nextReview && c.nextReview >= dayStart && c.nextReview < dayEnd);
 
     // Overdue cards (if cell is today or in the past, cards whose nextReview is prior to dayStart)
     const isPastOrToday = cellDate <= today || isCellToday;
     const overdueCards = isPastOrToday
-      ? cards.filter(c => {
+      ? visibleCards.filter(c => {
           if (!c.nextReview) return false;
           // nextReview is older than this day's start, and wasn't reviewed since
           return c.nextReview < dayStart && !history.some(h => h.cardId === c.id && h.ts >= dayStart);
@@ -88,7 +95,7 @@ export const CalendarGrid = ({
   const getSelectedDayReviews = () => {
     if (!selectedDayTs) return [];
     const dayEnd = selectedDayTs + 86400000;
-    return cards.filter(c => c.nextReview && c.nextReview >= selectedDayTs && c.nextReview < dayEnd);
+    return visibleCards.filter(c => c.nextReview && c.nextReview >= selectedDayTs && c.nextReview < dayEnd);
   };
 
   const selectedReviews = getSelectedDayReviews();
@@ -112,6 +119,25 @@ export const CalendarGrid = ({
             <Button variant="ghost" size="sm" onClick={() => navMonth(-1)}>←</Button>
             <Button variant="ghost" size="sm" onClick={() => navMonth(1)}>→</Button>
           </div>
+        </div>
+
+        <div className="cal-filter-row" style={{ marginBottom: '12px' }}>
+          <select
+            className="topic-select-filter"
+            value={selectedExamId}
+            onChange={(e) => {
+              setSelectedExamId(e.target.value);
+              setSelectedDayTs(null);
+              setSelectedDayLabel('');
+            }}
+          >
+            <option value="">All exams</option>
+            {exams.map((exam) => (
+              <option key={exam.id} value={exam.id}>
+                {exam.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Days Header */}
@@ -196,12 +222,12 @@ export const CalendarGrid = ({
           <div className="cal-side-content">
             <div className="cal-side-title">{selectedDayLabel}</div>
             <div className="cal-side-subtitle">
-              {selectedReviews.length} review{selectedReviews.length !== 1 ? 's' : ''} scheduled
+              {selectedReviews.length} card{selectedReviews.length !== 1 ? 's' : ''} due or scheduled
             </div>
             
             <div className="cal-side-list">
               {selectedReviews.length === 0 ? (
-                <div className="cal-side-empty-list">No reviews scheduled for this day</div>
+                <div className="cal-side-empty-list">No cards due or scheduled for this day</div>
               ) : (
                 selectedReviews.map(c => {
                   const topic = topics.find(t => t.id === c.topicId);

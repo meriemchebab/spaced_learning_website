@@ -22,8 +22,11 @@ export const CardsLibrary = ({
   const loadData = async () => {
     try {
       setLoading(true);
+      const filters = {};
+      if (filterType !== 'all') filters.type = filterType;
+      if (filterTopicId) filters.topicId = Number(filterTopicId);
       const [allCards, allTopics] = await Promise.all([
-        api.fetchCards(),
+        api.fetchCards(filters),
         api.fetchTopics()
       ]);
       setCards(allCards);
@@ -37,7 +40,7 @@ export const CardsLibrary = ({
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filterType, filterTopicId]);
 
   const getRetEst = (card) => {
     if (!card.lastReview) return 100;
@@ -54,12 +57,6 @@ export const CardsLibrary = ({
     question: 'var(--blue)',
     note: 'var(--green)'
   };
-
-  const filteredCards = cards.filter(c => {
-    if (filterType !== 'all' && c.ctype !== filterType) return false;
-    if (filterTopicId && c.topicId !== filterTopicId) return false;
-    return true;
-  });
 
   const isDue = (card) => {
     return !card.nextReview || Date.now() >= card.nextReview;
@@ -101,17 +98,18 @@ export const CardsLibrary = ({
 
       {/* Cards Grid */}
       <div className="cards-grid">
-        {filteredCards.length === 0 ? (
+        {cards.length === 0 ? (
           <div className="empty" style={{ gridColumn: '1 / -1', padding: '60px 0' }}>
             <div className="e-icon">🃏</div>
             <div className="e-title">No cards found</div>
             <div className="e-sub">Capture notes or concepts using the "+ Card" button.</div>
           </div>
         ) : (
-          filteredCards.map(c => {
+          cards.map(c => {
             const topic = topics.find(t => t.id === c.topicId);
             const ret = getRetEst(c);
             const due = isDue(c);
+            const topicLabel = topic ? topic.name : '';
             
             return (
               <div 
@@ -121,7 +119,7 @@ export const CardsLibrary = ({
                   if (onReviewCard) {
                     onReviewCard({
                       ...c,
-                      topicName: topic ? topic.name : 'No topic',
+                      topicName: topicLabel,
                       retention: ret
                     });
                   }
@@ -139,7 +137,7 @@ export const CardsLibrary = ({
                 </div>
                 
                 <div className="sc-q">{c.question}</div>
-                {topic && <div className="card-item-topic-name">{topic.name}</div>}
+                {topicLabel && <Badge variant="purple">{topicLabel}</Badge>}
                 
                 <div className="sc-meta-row">
                   <Badge variant="blue">{c.method}</Badge>

@@ -12,61 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .serializers import CardSerializer,TopicSerializer,ExamSerializer
 from django.http import Http404
-# Rating.Again (==1) forgot the card
-# Rating.Hard (==2) remembered the card with serious difficulty
-# Rating.Good (==3) remembered the card after a hesitation
-# Rating.Easy (==4) remembered the card easily
 
-# Create your views here.
-# - this is for getting the cards 
-# fetsh_card_by_id(id)
-# fetsh_card_by_topic(topic_id)
-# fetsh_card_by_date(date , due)
-# fetsh_card_by_type(type : str)
-
-# @api_view(['GET'])
-# def fetsh_card_by_id(request,card_id : int):
-#     card = get_object_or_404(Card, pk=card_id)
-#     respo = {
-#         "id": card.id,
-#         "question": card.question,
-#         "answer": card.answer,
-#         "topic": {
-#             "id": card.topic.id,
-#             "topic_name": card.topic.topic_name,
-#             "subject": card.topic.subject,
-#             "notes": card.topic.notes,
-#         },
-#         "image": card.image.url if card.image else None,
-#         "card_type": card.card_type,
-#         "review_method": card.review_method,
-#         "attached_file": card.attached_file.url if card.attached_file else None,
-#         "audio": card.audio.url if card.audio else None,
-#         "context_hint": card.context_hint,
-      
-#     }
-#     return Response(respo, status=200)
-
-
-# def _serialize_card_info(card : Card):
-#     return {
-#         "id": card.id,
-#         "question": card.question,
-#         "answer": card.answer,
-#         "topic": {
-#             "id": card.topic.id,
-#             "topic_name": card.topic.topic_name,
-#             "subject": card.topic.subject,
-#             "notes": card.topic.notes,
-#         },
-#         "image": card.image.url if card.image else None,
-#         "card_type": card.card_type,
-#         "review_method": card.review_method,
-#         "attached_file": card.attached_file.url if card.attached_file else None,
-#         "audio": card.audio.url if card.audio else None,
-#         "context_hint": card.context_hint,
-      
-#     }
 def get_fsrs_data(card : Card):
     return {
         "due": card.due,
@@ -78,45 +24,7 @@ def get_fsrs_data(card : Card):
     }
 
 
-# @api_view(['GET'])
-# def fetsh_card_by_topic(request, topic_id : int):
-#     cards = Card.objects.select_related('topic').filter(topic_id=topic_id).order_by('id')
-#     if not cards.exists():
-#         return Response({"detail": "no cards were found for that topic"}, status=404)
-#     return Response([_serialize_card_info(card) for card in cards], status=200)
 
-
-# @api_view(['GET'])
-# def fetsh_card_by_date(request, due : datetime):
-#     cards = Card.objects.select_related('topic').filter(due__date=due).order_by('due', 'id')
-#     if not cards.exists():
-#         return Response({"detail": "no cards were found for that date"}, status=404)
-#     return Response([_serialize_card_info(card) for card in cards], status=200)
-
-
-# @api_view(['GET'])
-# def fetsh_card_by_type(request, type : str):
-#     cards = Card.objects.select_related('topic').filter(card_type=type).order_by('id')
-#     if not cards.exists():
-#         return Response({"detail": "no cards were found for that type"}, status=404)
-#     return Response([_serialize_card_info(card) for card in cards], status=200)
-def fetch_card_fsrs_info(card_id : int):
-    card = get_object_or_404(Card,pk=card_id)
-    return get_fsrs_data(card=card)
-
-
-# class Card:
-#     """
-#     Represents a flashcard in the FSRS system.
-
-#     Attributes:
-#         card_id: The id of the card. Defaults to the epoch milliseconds of when the card was created.
-#         state: The card's current learning state.
-#         step: The card's current learning or relearning step or None if the card is in the Review state.
-#         stability: Core mathematical parameter used for future scheduling.
-#         difficulty: Core mathematical parameter used for future scheduling.
-#         due: The date and time when the card is due next.
-#         last_review: The date and time of the card's last review.
 
 def calculate_fsrs_stats(db_card, user_rating, now):
     """
@@ -193,8 +101,8 @@ def process_flashcard_review(request,card_id :int , user_rating :int, duration_m
         db_card = get_object_or_404(Card, pk=card_id, user=user)
         settings_object = get_object_or_404(Scheduler_settings, user=user)
         
-    elif request.headers.get("Guest_ID"):
-        guest_id = request.headers.get("Guest_ID")
+    elif request.headers.get("Guest"):
+        guest_id = request.headers.get("Guest")
         db_card = get_object_or_404(Card, pk=card_id, guest=guest_id)
         settings_object = get_object_or_404(Scheduler_settings, guest=guest_id)
         
@@ -267,7 +175,7 @@ class ReadUpdateDeleteCard(generics.RetrieveUpdateDestroyAPIView):
             return Card.objects.filter(user=self.request.user)
 
         # Guests can only access cards tied to their Guest ID
-        guest_id = self.request.headers.get("Guest_ID") 
+        guest_id = self.request.headers.get("Guest") 
         if guest_id:
             return Card.objects.filter(user=None, guest=guest_id)
 
@@ -277,13 +185,35 @@ class ReadUpdateDeleteCard(generics.RetrieveUpdateDestroyAPIView):
 class CreateCard(generics.CreateAPIView):
     serializer_class = CardSerializer
 
+    def _get_no_topic(self):
+        if self.request.user.is_authenticated:
+            topic, _ = Topic.objects.get_or_create(
+                user=self.request.user,
+                defaults={"topic_name": "No topic", "subject": "other", "notes": ""}
+            )
+            return topic
+
+        guest_id = self.request.headers.get("Guest")
+        if guest_id:
+            topic, _ = Topic.objects.get_or_create(
+                user=None,
+                guest=guest_id,
+                topic_name="No topic",
+                defaults={"subject": "other", "notes": ""}
+            )
+            return topic
+
+        raise ValueError("the user is not allowed to create a card")
+
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
+            topic = serializer.validated_data.get("topic") or self._get_no_topic()
+            serializer.save(user=self.request.user, topic=topic)
             return
-        guest_id = self.request.headers.get("Guest_ID") 
+        guest_id = self.request.headers.get("Guest") 
         if guest_id:
-            serializer.save(user=None, guest=guest_id)
+            topic = serializer.validated_data.get("topic") or self._get_no_topic()
+            serializer.save(user=None, guest=guest_id, topic=topic)
             return
         raise ValueError("the user is not allowed to create a card")
 
@@ -297,7 +227,7 @@ class TopicListCreateView(generics.ListCreateAPIView):
                 return Topic.objects.filter(user=self.request.user)
             except Exception:
                 return Topic.objects.none()
-        guest_id = self.request.headers.get("Guest_ID") or self.request.headers.get("Guest-ID") or self.request.headers.get("X-Guest-ID")
+        guest_id = self.request.headers.get("Guest") 
         if guest_id:
             return Topic.objects.filter(user=None, guest=guest_id)
         return Topic.objects.none()
@@ -310,10 +240,14 @@ class TopicListCreateView(generics.ListCreateAPIView):
                 return
             except Exception:
                 pass
-        guest_id = self.request.headers.get("Guest_ID") or self.request.headers.get("Guest-ID") or self.request.headers.get("X-Guest-ID")
-        if guest_id:
-            serializer.save(user=None, guest=guest_id)
-            return
+        try:
+            guest_id = self.request.headers.get("Guest") 
+            if guest_id:
+                print("guest is here creating a topic")
+                serializer.save(user=None, guest=guest_id)
+                return
+        except Exception as e:
+            print(f"there is a problem , error type : {e}")
         raise exceptions.PermissionDenied("Authentication credentials or Guest_ID header were not provided.")
 
 
@@ -326,7 +260,7 @@ class AnalyticsView(APIView):
             card_filter = {'user': request.user}
             log_filter = {'card_id__user': request.user}
         else:
-            guest_id = request.headers.get("Guest_ID") or request.headers.get("Guest-ID") or request.headers.get("X-Guest-ID")
+            guest_id = request.headers.get("Guest") 
             if guest_id:
                 card_filter = {'user': None, 'guest': guest_id}
                 log_filter = {'card_id__guest': guest_id}
@@ -380,11 +314,45 @@ class AnalyticsView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class ExamListView(generics.ListAPIView):
+    serializer_class = ExamSerializer
+
+    def get_queryset(self): # type: ignore
+        if self.request.user.is_authenticated:
+            return Exam.objects.filter(user=self.request.user)
+
+        guest_id = self.request.headers.get("Guest")
+        if guest_id:
+            return Exam.objects.filter(user=None, guest=guest_id)
+
+        return Exam.objects.none()
+
+
 class RetrieveCards(generics.ListCreateAPIView):
     
     # permission_class= [IsAuthenticated]
     """this class view will give all the retrieval methods React needs in one generic place """
     serializer_class = CardSerializer
+
+    def _get_no_topic(self):
+        if self.request.user.is_authenticated:
+            topic, _ = Topic.objects.get_or_create(
+                user=self.request.user,
+                defaults={"topic_name": "No topic", "subject": "other", "notes": ""}
+            )
+            return topic
+
+        guest_id = self.request.headers.get("Guest")
+        if guest_id:
+            topic, _ = Topic.objects.get_or_create(
+                user=None,
+                guest=guest_id,
+                topic_name="No topic",
+                defaults={"subject": "other", "notes": ""}
+            )
+            return topic
+
+        raise ValueError("the user is not allowed to create a card")
 
     def get_queryset(self): # type: ignore
         # if im filtering for a user :
@@ -392,7 +360,7 @@ class RetrieveCards(generics.ListCreateAPIView):
             user = self.request.user
             queryset = Card.objects.filter(user=user)
         else:
-            guest_id = self.request.headers.get("Guest_ID") or self.request.headers.get("X-Guest-ID")
+            guest_id = self.request.headers.get("Guest") 
             if guest_id:
                 queryset = Card.objects.filter(user=None, guest=guest_id)
             else:
@@ -409,19 +377,19 @@ class RetrieveCards(generics.ListCreateAPIView):
         if requested_card_id:
             queryset = queryset.filter(id = requested_card_id)
         if requested_topic:
-            queryset = queryset.filter(topic=requested_topic)
+            queryset = queryset.filter(topic_id=requested_topic)
 
         if requested_type:
-            queryset = queryset.filter(type=requested_type)
+            queryset = queryset.filter(card_type=requested_type)
 
         if requested_date:
-            queryset = queryset.filter(date=requested_date)
+            queryset = queryset.filter(due__date=requested_date)
 
         if requested_exam:
             queryset = queryset.filter(topic__exams=requested_exam)
 
         if requested_review_type:
-            queryset = queryset.filter(review_type=requested_review_type)
+            queryset = queryset.filter(review_method=requested_review_type)
 
         if requested_cards_by_difficulty:
             queryset = queryset.filter(difficulty=requested_cards_by_difficulty)
@@ -430,11 +398,13 @@ class RetrieveCards(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
-            serializer.save(user=self.request.user)
+            topic = serializer.validated_data.get("topic") or self._get_no_topic()
+            serializer.save(user=self.request.user, topic=topic)
             return
-        guest_id = self.request.headers.get("Guest_ID") or self.request.headers.get("X-Guest-ID")
+        guest_id = self.request.headers.get("Guest") 
         if guest_id:
-            serializer.save(user=None, guest=guest_id)
+            topic = serializer.validated_data.get("topic") or self._get_no_topic()
+            serializer.save(user=None, guest=guest_id, topic=topic)
             return
         raise ValueError("the user is not allowed to create a card")
     
@@ -449,5 +419,15 @@ def fetsh_card_by_date(due):
 @api_view(['GET'])
 def get_today_cards(request):
     today = timezone.now().date()
-    return fetsh_card_by_date(today)
+    topic_id = request.query_params.get("topic")
+
+    cards = Card.objects.select_related('topic').filter(due__date=today).order_by('due', 'id')
+    if topic_id:
+        cards = cards.filter(topic_id=topic_id)
+
+    if not cards:
+        return Response({"detail": "no cards were found for that date"}, status=status.HTTP_404_NOT_FOUND)
+
+    sery = CardSerializer(cards, many=True)
+    return Response(sery.data)
     

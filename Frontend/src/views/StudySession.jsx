@@ -13,6 +13,25 @@ export const StudySession = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isEarlyReview, setIsEarlyReview] = useState(false);
+  const [topics, setTopics] = useState([]);
+
+  useEffect(() => {
+    const loadTopics = async () => {
+      try {
+        const allTopics = await api.fetchTopics();
+        setTopics(allTopics);
+      } catch (err) {
+        console.error("Failed to load topics for study session:", err);
+      }
+    };
+
+    loadTopics();
+  }, []);
+
+  const resolveTopicName = (topicId) => {
+    const topic = topics.find((item) => item.id === topicId);
+    return topic ? topic.name : 'No topic';
+  };
 
   const loadStudyPlan = async (topicId) => {
     try {
@@ -38,12 +57,17 @@ export const StudySession = ({
       if (addToast) {
         addToast(response.message || 'Review submitted');
       }
+
+      setQueue((prevQueue) => {
+        const nextQueue = prevQueue.filter((card) => card.id !== cardId);
+        if (nextQueue.length === 0 && onSessionDone) {
+          onSessionDone();
+        }
+        return nextQueue;
+      });
+      setCurrentIndex(0);
       
-      // Advance in queue
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      
-      if (nextIndex >= queue.length) {
+      if (queue.length <= 1 && onSessionDone) {
         if (onSessionDone) onSessionDone();
       }
     } catch (err) {
@@ -58,7 +82,9 @@ export const StudySession = ({
   const handleReviewEarly = async () => {
     try {
       setLoading(true);
-      const allCards = await api.fetchCards();
+      const allCards = await api.fetchCards(
+        selectedTopicId ? { topicId: Number(selectedTopicId) } : {}
+      );
       
       // Sort by lowest retention estimate first
       const getRetEst = (c) => {
@@ -76,7 +102,7 @@ export const StudySession = ({
         question: c.question,
         hint: c.hint,
         topicId: c.topicId,
-        topicName: c.topicId ? 'Topic' : 'No topic', // topics resolved inside Flashcard
+        topicName: resolveTopicName(c.topicId),
         ctype: c.ctype,
         method: c.method,
         hasFile: c.hasFile,
@@ -118,13 +144,13 @@ export const StudySession = ({
           </div>
         </div>
       ) : (
-        <Flashcard
-          card={queue[currentIndex]}
-          topicName={queue[currentIndex].topicName}
-          progressText={`Card ${currentIndex + 1} of ${queue.length}`}
-          onFeedback={handleFeedback}
-          onSkip={handleSkip}
-          showSkip={true}
+          <Flashcard
+            card={queue[currentIndex]}
+            topicName={queue[currentIndex].topicName}
+            progressText={`Card ${currentIndex + 1} of ${queue.length}`}
+            onFeedback={handleFeedback}
+            onSkip={handleSkip}
+            showSkip={true}
         />
       )}
     </div>

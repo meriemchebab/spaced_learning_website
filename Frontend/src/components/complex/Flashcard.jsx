@@ -25,7 +25,7 @@ export const Flashcard = ({
   onFeedback,
   onSkip,
   progressText,
-  topicName = 'No topic',
+  topicName = '',
   showSkip = true
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -36,6 +36,7 @@ export const Flashcard = ({
   }, [card?.id]);
 
   if (!card) return null;
+  const hasTopic = Boolean(topicName && topicName.trim());
 
   const retColor = card.retention > 65 ? 'var(--green)' : card.retention > 35 ? 'var(--amber)' : 'var(--red)';
 
@@ -47,7 +48,7 @@ export const Flashcard = ({
         <div className="flashcard-front">
           <div className="flashcard-header">
             {progressText ? <Badge variant="gray">{progressText}</Badge> : <span />}
-            <Badge variant="purple">{topicName}</Badge>
+            {hasTopic ? <Badge variant="purple">{topicName}</Badge> : <span />}
           </div>
           
           <div className="flashcard-body">
@@ -84,7 +85,7 @@ export const Flashcard = ({
         <div className="flashcard-back">
           <div className="flashcard-header">
             {progressText ? <Badge variant="gray">{progressText}</Badge> : <span />}
-            <Badge variant="purple">{topicName}</Badge>
+            {hasTopic ? <Badge variant="purple">{topicName}</Badge> : <span />}
           </div>
           
           <div className="flashcard-body">
