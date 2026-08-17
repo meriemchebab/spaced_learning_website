@@ -1,5 +1,7 @@
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from datetime import timedelta
+from fsrs import Scheduler
 class User(models.Model):
     user_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50,default="user")
@@ -12,7 +14,12 @@ class Topic(models.Model):
     notes = models.TextField(blank=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="topics",blank=True,null=True)
     guest = models.CharField(max_length=100,null=True)
-
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'guest'], name='unique_user_guest_topic'),
+            models.UniqueConstraint(fields=['user', 'topic_name'], name='unique_user_topicname'),
+            models.UniqueConstraint(fields=['guest', 'topic_name'], name='unique_guest_topicname'),
+        ]
     def __str__(self) -> str:
         return self.topic_name
 
@@ -33,7 +40,6 @@ class Card(models.Model):
         WATCH = 'WT', 'Watch'
     # FSRS State Enums (Matches Py-FSRS State)
     class FSRSState(models.IntegerChoices):
-        NEW = 0, 'New'
         LEARNING = 1, 'Learning'
         REVIEW = 2, 'Review'
         RELEARNING = 3, 'Relearning'
@@ -65,9 +71,9 @@ class Card(models.Model):
 
     # py-fsrs fields — these get updated after every review
     due        = models.DateTimeField(null=True, blank=True)
-    stability  = models.FloatField(default=0)
-    difficulty = models.FloatField(default=0) # difficulte , good , easy
-    step = models.IntegerField(null=True, blank=True, default=None)
+    stability  = models.FloatField(null=True, blank=True, default=None)
+    difficulty = models.FloatField(null=True, blank=True, default=None)# difficulte , good , easy
+    step = models.IntegerField(null=True,blank=True,default=0)
     # elapsed_days: The actual number of days that have passed since the user last reviewed this card.
     elapsed_days    = models.IntegerField(default=0)
     # # the actual days that the algorithm wanted the user to review the card 
@@ -77,7 +83,7 @@ class Card(models.Model):
     reps       = models.IntegerField(default=0)
     # how much you got it wrong 
     lapses     = models.IntegerField(default=0)
-    state = models.IntegerField(choices=FSRSState.choices, default=FSRSState.NEW)
+    state = models.IntegerField(choices=FSRSState.choices, default=FSRSState.LEARNING)
     last_review = models.DateTimeField(null=True, blank=True)
     # the user
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="cards",blank=True,null=True)
@@ -140,8 +146,7 @@ class Exam(models.Model):
         return f"{self.exam_name}"
     
 
-from datetime import timedelta
-from fsrs import Scheduler
+
 
 
 DEFAULT_PARAMETERS = [
@@ -186,7 +191,7 @@ class Scheduler_settings(models.Model):
     stores the FSRS scheduler configuration in the database.
     """
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="fsrs_settings",blank=True,null=True)
-    guest = models.CharField(max_length=100,null=True)
+    guest = models.CharField(max_length=100,null=True,unique=True)
     parameters = models.JSONField(
         default=default_parameters,
         help_text="FSRS parameter list used to initialize the scheduler.",
@@ -198,11 +203,11 @@ class Scheduler_settings(models.Model):
     maximum_interval = models.IntegerField(default=36500)
     enable_fuzzing = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
-    card_limit = models.IntegerField(default=None)
+    card_limit = models.IntegerField(null=True)
     class Meta:
         verbose_name = "FSRS Scheduler"
         verbose_name_plural = "FSRS Schedulers"
-
+        unique_together = ('user', 'guest')
 
     def build_scheduler(self) -> Scheduler:
         """

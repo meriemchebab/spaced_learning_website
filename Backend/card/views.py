@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Card, ReviewLog, Scheduler_settings, Topic
+from .models import Card, ReviewLog, Scheduler_settings, Topic , Exam
 from django.db import transaction
 from math import ceil
 from datetime import datetime, timedelta, timezone as dt_timezone
@@ -104,8 +104,10 @@ def process_flashcard_review(request,card_id :int , user_rating :int, duration_m
     elif request.headers.get("Guest"):
         guest_id = request.headers.get("Guest")
         db_card = get_object_or_404(Card, pk=card_id, guest=guest_id)
-        settings_object = get_object_or_404(Scheduler_settings, guest=guest_id)
-        
+        # if the guest is new then make a new scheduker for it
+        settings_object,created = Scheduler_settings.objects.get_or_create(guest=guest_id)
+        if created:
+            print("new guest visited")
     else:
         return Response({"detail": "Authentication credentials or Guest_ID were not provided."}, status=401)
     
@@ -114,8 +116,10 @@ def process_flashcard_review(request,card_id :int , user_rating :int, duration_m
     try:
         
         fsrs_card.due = db_card.due or timezone.now()
-        fsrs_card.stability = db_card.stability
-        fsrs_card.difficulty = db_card.difficulty
+        if db_card.stability is not None:
+            fsrs_card.stability = db_card.stability
+        if db_card.difficulty is not None:
+            fsrs_card.difficulty = db_card.difficulty
         fsrs_card.step = db_card.step
         fsrs_card.state = State(db_card.state)
         if db_card.last_review:
@@ -131,10 +135,11 @@ def process_flashcard_review(request,card_id :int , user_rating :int, duration_m
             
             # Overwrite the Django card fields with the new FSRS math
                 db_card.due = updated_fsrs_card.due
-                db_card.stability = updated_fsrs_card.stability or 0.0
-                db_card.difficulty = updated_fsrs_card.difficulty or 0.0
+                db_card.stability = updated_fsrs_card.stability 
+                db_card.difficulty = updated_fsrs_card.difficulty or None
                 db_card.state = updated_fsrs_card.state.value # .value converts Enum back to Int
                 db_card.last_review = updated_fsrs_card.last_review
+                db_card.step = updated_fsrs_card.step   
 
                 stats = calculate_fsrs_stats(db_card=db_card,user_rating=user_rating,now=fsrs_log.review_datetime)
                 db_card.elapsed_days = stats["elapsed_days"]
@@ -282,14 +287,15 @@ class AnalyticsView(APIView):
 
         retrievability_scores = []
         for card in review_cards:
-            if card.last_review and card.stability > 0:
-                elapsed_days = max(0.0, (now - card.last_review).total_seconds() / 86400.0)
-                r = (1.0 + FACTOR * (elapsed_days / card.stability)) ** DECAY
-                retrievability_scores.append(r)
-            elif card.stability > 0:
-                retrievability_scores.append(1.0)
-            else:
-                retrievability_scores.append(0.0)
+            if card.stability is not None:
+                if card.last_review and card.stability > 0:
+                    elapsed_days = max(0.0, (now - card.last_review).total_seconds() / 86400.0)
+                    r = (1.0 + FACTOR * (elapsed_days / card.stability)) ** DECAY
+                    retrievability_scores.append(r)
+                elif card.stability > 0:
+                    retrievability_scores.append(1.0)
+                else:
+                    retrievability_scores.append(0.0)
 
         overall_retention_rate = (
             sum(retrievability_scores) / len(retrievability_scores) if retrievability_scores else 0.0
