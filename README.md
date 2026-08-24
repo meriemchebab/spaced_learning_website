@@ -1,47 +1,33 @@
-# Spaced Learning Website
+# Spaced Learning Platform
 
-A work-in-progress spaced repetition platform for students, built to support active recall, review tracking, and learning analytics.
+> A modern spaced repetition platform powered by the **FSRS (Free Spaced Repetition Scheduler)** algorithm. Built to optimize active recall, track reviews, and provide actionable learning analytics.
 
-## What it includes
+![Status: Work in Progress](https://img.shields.io/badge/Status-Work_in_Progress-orange)
 
-- Django backend for flashcards, topics, reviews, and analytics
-- React + Vite frontend for the study experience and dashboard UI
-- JWT-based auth and CORS setup for local frontend-backend development
+## Features
+
+- **Optimized Retention:** Integrates the FSRS algorithm (enhanced by deep learning concepts) to accurately track memory states and calculate optimal review intervals.
+- **Robust API:** A comprehensive Django REST backend managing flashcards, topics, study sessions, and user analytics.
+- **Interactive Study UI:** A fast, responsive frontend built with React and Vite, featuring study dashboards and visual learning charts.
+- **Secure Authentication:** JWT-based authentication with properly configured CORS for seamless local development and secure client-server communication.
 
 ## Tech Stack
 
-- Backend: Django, Django REST Framework, SimpleJWT
-- Frontend: React, Vite, Chart.js
-- Database: SQLite for local development
+**Backend**
+- Python, Django, Django REST Framework
+- SimpleJWT (Authentication)
+- FSRS (Spaced Repetition Algorithm)
+- SQLite (Local Database)
+
+**Frontend**
+- React, Vite
+- Chart.js (Data Visualization)
 
 ## Project Structure
 
-- `Backend/` Django API and app logic
-- `Frontend/` React app and UI components
-- `test/` project-level test assets
+```text
+.
+├── Backend/      # Django API, business logic, and memory scheduling
+├── Frontend/     # React SPA, UI components, and state management
+└── test/         # Project-level testing assets and configurations
 
-## Local Setup
-
-Backend:
-
-```bash
-cd Backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-Frontend:
-
-```bash
-cd Frontend
-npm install
-npm run dev
-```
-
-## Notes
-
-- This project is still being actively built.
-- Some features and pages may be incomplete or under refinement.
