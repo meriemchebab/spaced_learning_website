@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import LearningCurveChart from '../components/complex/LearningCurveChart';
+import ForgettingCurveChart from '../components/complex/ForgettingCurveChart';
 import './AnalyticsView.css';
 
 ChartJS.register(
@@ -32,7 +34,7 @@ export const AnalyticsView = () => {
       try {
         setLoading(true);
         const data = await api.fetchDashboardStats();
-        setHistory(data.history || []);
+        setHistory(Array.isArray(data.history) ? data.history : []);
       } catch (err) {
         console.error("Failed to load analytics data:", err);
       } finally {
@@ -46,17 +48,19 @@ export const AnalyticsView = () => {
     return <div className="loading-state">Loading learning analytics...</div>;
   }
 
-  // 1. Reviews this week calculations
+  // 1. Reviews this week calculations (with sample fallbacks if new account)
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const weekCounts = Array(7).fill(0);
+  const weekCounts = history.length > 0 ? Array(7).fill(0) : [4, 8, 5, 12, 9, 14, 10];
   const now = Date.now();
 
-  history.forEach(h => {
-    const diff = Math.floor((now - h.ts) / 86400000);
-    if (diff < 7) {
-      weekCounts[6 - diff]++;
-    }
-  });
+  if (history.length > 0) {
+    history.forEach(h => {
+      const diff = Math.floor((now - h.ts) / 86400000);
+      if (diff < 7) {
+        weekCounts[6 - diff]++;
+      }
+    });
+  }
 
   const weekLabels = [];
   for (let i = 6; i >= 0; i--) {
@@ -68,8 +72,9 @@ export const AnalyticsView = () => {
     labels: weekLabels,
     datasets: [
       {
+        label: 'Reviews Completed',
         data: weekCounts,
-        backgroundColor: '#EEEDFE',
+        backgroundColor: 'rgba(91, 79, 212, 0.45)',
         borderColor: '#5B4FD4',
         borderWidth: 1.5,
         borderRadius: 6
@@ -78,40 +83,50 @@ export const AnalyticsView = () => {
   };
 
   // 2. Card type distribution calculations
-  const ctypeCount = { exercise: 0, concept: 0, mistake: 0, question: 0, note: 0 };
-  history.forEach(h => {
-    if (ctypeCount[h.ctype] !== undefined) {
-      ctypeCount[h.ctype]++;
-    }
-  });
+  const ctypeCount = history.length > 0 
+    ? { exercise: 0, concept: 0, mistake: 0, question: 0, note: 0 }
+    : { exercise: 12, concept: 24, mistake: 8, question: 18, note: 6 };
+
+  if (history.length > 0) {
+    history.forEach(h => {
+      if (ctypeCount[h.ctype] !== undefined) {
+        ctypeCount[h.ctype]++;
+      }
+    });
+  }
 
   const cardTypesData = {
     labels: ['Exercise', 'Concept', 'Mistake', 'Question', 'Note'],
     datasets: [
       {
         data: Object.values(ctypeCount),
-        backgroundColor: ['#FEF2E0', '#EEEDFE', '#FDECEA', '#E7F2FB', '#E6F4EE'],
-        borderColor: ['#B5600A', '#5B4FD4', '#BE3A2A', '#1A68A8', '#2C7A50'],
-        borderWidth: 2
+        backgroundColor: ['rgba(230, 160, 40, 0.3)', 'rgba(91, 79, 212, 0.3)', 'rgba(222, 53, 11, 0.3)', 'rgba(55, 138, 221, 0.3)', 'rgba(29, 158, 117, 0.3)'],
+        borderColor: ['var(--amber)', 'var(--purple)', 'var(--red)', 'var(--blue)', 'var(--green)'],
+        borderWidth: 1.5
       }
     ]
   };
 
   // 3. Ratings over time calculations
-  const ratingCount = { hard: 0, good: 0, easy: 0 };
-  history.forEach(h => {
-    if (ratingCount[h.rating] !== undefined) {
-      ratingCount[h.rating]++;
-    }
-  });
+  const ratingCount = history.length > 0 
+    ? { hard: 0, good: 0, easy: 0 }
+    : { hard: 14, good: 38, easy: 22 };
+
+  if (history.length > 0) {
+    history.forEach(h => {
+      if (ratingCount[h.rating] !== undefined) {
+        ratingCount[h.rating]++;
+      }
+    });
+  }
 
   const ratingCountsData = {
-    labels: ['Hard', 'Good', 'Easy'],
+    labels: ['Hard (Forgot)', 'Good (Recalled)', 'Easy (Instant)'],
     datasets: [
       {
         data: Object.values(ratingCount),
-        backgroundColor: ['#FDECEA', '#FEF2E0', '#E6F4EE'],
-        borderColor: ['#BE3A2A', '#B5600A', '#2C7A50'],
+        backgroundColor: ['rgba(222, 53, 11, 0.3)', 'rgba(230, 160, 40, 0.3)', 'rgba(29, 158, 117, 0.3)'],
+        borderColor: ['var(--red)', 'var(--amber)', 'var(--green)'],
         borderWidth: 1.5,
         borderRadius: 6
       }
@@ -122,28 +137,17 @@ export const AnalyticsView = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false
-      }
+      legend: { display: false }
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          color: '#A09990',
-          stepSize: 1
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.04)'
-        }
+        ticks: { color: '#A09990', stepSize: 2 },
+        grid: { color: 'rgba(255, 255, 255, 0.05)' }
       },
       x: {
-        ticks: {
-          color: '#A09990'
-        },
-        grid: {
-          display: false
-        }
+        ticks: { color: '#A09990' },
+        grid: { display: false }
       }
     }
   };
@@ -157,22 +161,23 @@ export const AnalyticsView = () => {
         position: 'bottom',
         labels: {
           color: '#A09990',
-          font: {
-            size: 11
-          },
+          font: { size: 11 },
           padding: 10
         }
       }
     },
-    cutout: '58%'
+    cutout: '62%'
   };
 
   return (
-    <div className="page-analytics">
+    <div className="page-analytics" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Learning & Cumulative Velocity Section */}
+      <LearningCurveChart />
+
       <div className="analytics-grid-top">
         {/* Reviews this week */}
         <div className="card analytics-card">
-          <div className="card-title">Reviews this week</div>
+          <div className="card-title">Reviews Velocity (Past 7 Days)</div>
           <div className="analytics-chart-wrap">
             <Bar data={reviewsThisWeekData} options={chartOptions} />
           </div>
@@ -180,16 +185,19 @@ export const AnalyticsView = () => {
 
         {/* Card type distribution */}
         <div className="card analytics-card">
-          <div className="card-title">Card type distribution</div>
+          <div className="card-title">Card Type Distribution</div>
           <div className="analytics-chart-wrap">
             <Doughnut data={cardTypesData} options={doughnutOptions} />
           </div>
         </div>
       </div>
 
-      {/* Ratings over time */}
+      {/* Forgetting Curve Simulator */}
+      <ForgettingCurveChart />
+
+      {/* Ratings accuracy breakdown */}
       <div className="card analytics-card full-width-card">
-        <div className="card-title">Ratings over time</div>
+        <div className="card-title">Recall Quality & Rating Breakdown</div>
         <div className="analytics-chart-wrap short-wrap">
           <Bar data={ratingCountsData} options={chartOptions} />
         </div>

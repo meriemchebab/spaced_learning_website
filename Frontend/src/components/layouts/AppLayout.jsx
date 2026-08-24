@@ -12,7 +12,9 @@ export const AppLayout = ({
   onSelectTopic,
   onAddTopicClick,
   onAddCardClick,
-  pageTitle
+  pageTitle,
+  currentUser,
+  onLogout
 }) => {
   return (
     <div className="app">
@@ -22,6 +24,8 @@ export const AppLayout = ({
         streak={streak}
         topics={topics}
         onSelectTopic={onSelectTopic}
+        currentUser={currentUser}
+        onLogout={onLogout}
       />
       <div className="main">
         <Topbar

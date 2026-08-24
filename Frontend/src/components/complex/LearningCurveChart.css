@@ -1,0 +1,81 @@
+.learning-curve-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lc-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.lc-metric-tile {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lc-metric-label {
+  font-size: 11px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lc-metric-val {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  color: var(--text1);
+}
+
+.lc-metric-sub {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.lc-time-pills {
+  display: flex;
+  gap: 6px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.lc-pill {
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lc-pill.active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.lc-chart-container {
+  height: 260px;
+  position: relative;
+  margin-top: 8px;
+}

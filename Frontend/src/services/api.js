@@ -139,30 +139,83 @@ function toBackendReviewMethod(method) {
   return map[String(method || '').toLowerCase()] || 'RC';
 }
 
+function getStoredRefreshToken() {
+  return localStorage.getItem('recall_refresh_token');
+}
+
+function getStoredUser() {
+  return localStorage.getItem('recall_username') || 'Guest';
+}
+
 export const api = {
   login: async (username, password) => {
-    const response = await fetch(`${API_BASE_URL}/api/token`, {
+    let response = await fetch(`${API_BASE_URL}/api/token/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
 
+    if (!response.ok && response.status === 404) {
+      // Fallback if backend does not use trailing slash
+      response = await fetch(`${API_BASE_URL}/api/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+    }
+
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Invalid credentials');
+      let errorMsg = 'Invalid credentials';
+      try {
+        const errJson = await response.json();
+        errorMsg = errJson.detail || errJson.non_field_errors?.[0] || errJson.username?.[0] || 'Invalid credentials';
+      } catch {
+        const text = await response.text();
+        if (text) errorMsg = text;
+      }
+      throw new Error(errorMsg);
     }
 
     const data = await response.json();
-    localStorage.setItem('recall_token', data.access || data.token);
-    return { token: data.access || data.token, username };
+    const accessToken = data.access || data.token;
+    const refreshToken = data.refresh || null;
+
+    if (accessToken) {
+      localStorage.setItem('recall_token', accessToken);
+    }
+    if (refreshToken) {
+      localStorage.setItem('recall_refresh_token', refreshToken);
+    }
+    localStorage.setItem('recall_username', username);
+    localStorage.removeItem('is_guest_mode');
+
+    return { token: accessToken, refreshToken, username };
+  },
+
+  loginAsGuest: () => {
+    localStorage.setItem('is_guest_mode', 'true');
+    localStorage.setItem('recall_username', 'Guest User');
+    return { username: 'Guest User', isGuest: true };
   },
 
   logout: async () => {
     localStorage.removeItem('recall_token');
+    localStorage.removeItem('recall_refresh_token');
+    localStorage.removeItem('recall_username');
+    localStorage.removeItem('is_guest_mode');
     return { success: true };
   },
 
-  isAuthenticated: () => !!localStorage.getItem('recall_token'),
+  isAuthenticated: () => {
+    return !!localStorage.getItem('recall_token') || localStorage.getItem('is_guest_mode') === 'true';
+  },
+
+  getCurrentUser: () => {
+    return getStoredUser();
+  },
+
+  getStoredToken,
+  getStoredRefreshToken,
 
   fetchDashboardStats: async () => {
     try {

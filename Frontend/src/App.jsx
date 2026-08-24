@@ -8,12 +8,15 @@ import TopicsLibrary from './views/TopicsLibrary';
 import CardsLibrary from './views/CardsLibrary';
 import AnalyticsView from './views/AnalyticsView';
 import ForgettingCurveChart from './components/complex/ForgettingCurveChart';
+import LoginPage from './views/LoginPage';
 import Button from './components/ui/Button';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import './styles/global.css';
 import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => api.isAuthenticated());
+  const [currentUser, setCurrentUser] = useState(() => api.getCurrentUser());
   const [activePage, setActivePage] = useState('dashboard');
   const [selectedTopicId, setSelectedTopicId] = useState('');
   const [dataVersion, setDataVersion] = useState(0);
@@ -32,6 +35,20 @@ function App() {
   const [activeQuickReview, setActiveQuickReview] = useState(null);
   const [isLoadingQuickReview, setIsLoadingQuickReview] = useState(false);
   const [quickReviewError, setQuickReviewError] = useState(null);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setCurrentUser(api.getCurrentUser());
+    setActivePage('dashboard');
+    loadData();
+  };
+
+  const handleLogout = async () => {
+    await api.logout();
+    setIsAuthenticated(false);
+    setCurrentUser('Guest');
+    setActivePage('login');
+  };
 
   const handleOpenCardInspector = async (cardOrId) => {
     if (!cardOrId) return;
@@ -329,6 +346,10 @@ function App() {
     }
   };
 
+  if (!isAuthenticated || activePage === 'login') {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <AppLayout
       activePage={activePage}
@@ -342,6 +363,8 @@ function App() {
       onAddTopicClick={() => setIsAddTopicOpen(true)}
       onAddCardClick={() => setIsAddCardOpen(true)}
       pageTitle={getPageTitle()}
+      currentUser={currentUser}
+      onLogout={handleLogout}
     >
       {renderView()}
 

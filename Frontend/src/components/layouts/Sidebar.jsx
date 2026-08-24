@@ -14,7 +14,9 @@ export const Sidebar = ({
   onNavigate,
   streak = 3,
   topics = [],
-  onSelectTopic
+  onSelectTopic,
+  currentUser = 'Guest',
+  onLogout
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', section: 'Study', icon: (
@@ -86,6 +88,21 @@ export const Sidebar = ({
       </nav>
       <div className="sidebar-footer">
         <div className="streak">🔥 <span>{streak} day streak</span></div>
+        <div className="user-profile-row" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>👤</span>
+            <span style={{ fontWeight: 500, color: 'var(--text1)' }}>{currentUser}</span>
+          </div>
+          {onLogout && (
+            <button 
+              onClick={onLogout}
+              style={{ background: 'transparent', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
+              title="Sign Out"
+            >
+              Sign out
+            </button>
+          )}
+        </div>
       </div>
     </aside>
   );
