@@ -9,12 +9,14 @@ import CardsLibrary from './views/CardsLibrary';
 import AnalyticsView from './views/AnalyticsView';
 import ForgettingCurveChart from './components/complex/ForgettingCurveChart';
 import Button from './components/ui/Button';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import './styles/global.css';
 import './App.css';
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [selectedTopicId, setSelectedTopicId] = useState('');
+  const [dataVersion, setDataVersion] = useState(0);
   
   // App-wide data
   const [topics, setTopics] = useState([]);
@@ -28,6 +30,34 @@ function App() {
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [activeQuickReview, setActiveQuickReview] = useState(null);
+  const [isLoadingQuickReview, setIsLoadingQuickReview] = useState(false);
+  const [quickReviewError, setQuickReviewError] = useState(null);
+
+  const handleOpenCardInspector = async (cardOrId) => {
+    if (!cardOrId) return;
+    setQuickReviewError(null);
+
+    if (typeof cardOrId === 'object' && cardOrId !== null) {
+      setActiveQuickReview(cardOrId);
+      return;
+    }
+
+    try {
+      setIsLoadingQuickReview(true);
+      setActiveQuickReview({});
+      const fetchedCards = await api.fetchCards({ cardId: cardOrId });
+      if (fetchedCards && fetchedCards.length > 0) {
+        setActiveQuickReview(fetchedCards[0]);
+      } else {
+        setQuickReviewError('Card not found or details unavailable.');
+      }
+    } catch (err) {
+      console.error("Failed to inspect card:", err);
+      setQuickReviewError('Failed to load card details.');
+    } finally {
+      setIsLoadingQuickReview(false);
+    }
+  };
 
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
@@ -100,6 +130,7 @@ function App() {
       setTopicNotes('');
       
       loadData();
+      setDataVersion(prev => prev + 1);
     } catch (err) {
       console.error("Failed to add topic:", err);
       addToast(err.message || 'Could not add topic');
@@ -133,10 +164,10 @@ function App() {
       setCardAttachedFile(null);
 
       loadData();
+      setDataVersion(prev => prev + 1);
       
       // Refresh current page if dashboard or cards
       if (activePage === 'dashboard' || activePage === 'cards') {
-        // Trigger a simple state nudge to force children update
         setActivePage(activePage);
       }
     } catch (err) {
@@ -168,37 +199,70 @@ function App() {
   const renderView = () => {
     switch (activePage) {
       case 'dashboard':
-        return <Dashboard onReviewSubmitted={loadData} />;
+        return (
+          <ErrorBoundary fallbackTitle="Dashboard error">
+            <Dashboard 
+              onReviewSubmitted={loadData} 
+              dataVersion={dataVersion} 
+              onStartTopicSession={(topicId) => {
+                setSelectedTopicId(topicId);
+                setActivePage('session');
+              }}
+              onNavigate={(page) => {
+                setActivePage(page);
+              }}
+            />
+          </ErrorBoundary>
+        );
       case 'session':
         return (
-          <StudySession 
-            selectedTopicId={null} 
-            onSessionDone={loadData}
-            addToast={addToast}
-          />
+          <ErrorBoundary fallbackTitle="Session error">
+            <StudySession 
+              selectedTopicId={selectedTopicId} 
+              onSessionDone={loadData}
+              addToast={addToast}
+            />
+          </ErrorBoundary>
         );
       case 'calendar':
-        return <CalendarGrid cards={cards} topics={topics} exams={exams} history={history} />;
+        return (
+          <ErrorBoundary fallbackTitle="Calendar error">
+            <CalendarGrid 
+              cards={cards} 
+              topics={topics} 
+              exams={exams} 
+              history={history} 
+              onReviewCard={handleOpenCardInspector}
+            />
+          </ErrorBoundary>
+        );
       case 'topics':
         return (
-          <TopicsLibrary 
-            onSelectTopic={(topicId) => {
-              setSelectedTopicId(topicId);
-              setActivePage('cards');
-            }} 
-          />
+          <ErrorBoundary fallbackTitle="Topics library error">
+            <TopicsLibrary 
+              onSelectTopic={(topicId) => {
+                setSelectedTopicId(topicId);
+                setActivePage('cards');
+              }} 
+            />
+          </ErrorBoundary>
         );
       case 'cards':
         return (
-          <CardsLibrary 
-            initialTopicId={selectedTopicId} 
-            onReviewCard={(card) => {
-              setActiveQuickReview(card);
-            }}
-          />
+          <ErrorBoundary fallbackTitle="Cards library error">
+            <CardsLibrary 
+              initialTopicId={selectedTopicId} 
+              dataVersion={dataVersion}
+              onReviewCard={handleOpenCardInspector}
+            />
+          </ErrorBoundary>
         );
       case 'analytics':
-        return <AnalyticsView />;
+        return (
+          <ErrorBoundary fallbackTitle="Analytics error">
+            <AnalyticsView />
+          </ErrorBoundary>
+        );
       case 'forgetting':
         return (
           <div className="forgetting-curve-view">
@@ -427,27 +491,50 @@ function App() {
 
       {/* QUICK REVIEW MODAL FROM CARDS VIEW */}
       {activeQuickReview && (
-        <div className="overlay open" onClick={() => setActiveQuickReview(null)}>
+        <div className="overlay open" onClick={() => {
+          setActiveQuickReview(null);
+          setQuickReviewError(null);
+        }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="m-head">
               <div className="m-title">Card Inspector</div>
-              <button className="close-btn" onClick={() => setActiveQuickReview(null)}>×</button>
+              <button className="close-btn" onClick={() => {
+                setActiveQuickReview(null);
+                setQuickReviewError(null);
+              }}>×</button>
             </div>
             <div className="m-body">
-              <Flashcard
-                card={activeQuickReview}
-                topicName={activeQuickReview.topicName}
-                onFeedback={async (cardId, rating) => {
-                  try {
-                    await api.submitCardReview(cardId, rating);
-                    setActiveQuickReview(null);
-                    loadData();
-                  } catch (err) {
-                    console.error("Failed to submit quick review:", err);
-                  }
-                }}
-                showSkip={false}
-              />
+              <ErrorBoundary fallbackTitle="Could not display card details">
+                {isLoadingQuickReview ? (
+                  <div className="loading-state">Loading card details...</div>
+                ) : quickReviewError ? (
+                  <div className="empty-sub" style={{ padding: '20px', textAlign: 'center', color: 'var(--red)' }}>
+                    {quickReviewError}
+                  </div>
+                ) : !activeQuickReview || typeof activeQuickReview !== 'object' ? (
+                  <div className="empty-sub" style={{ padding: '20px', textAlign: 'center' }}>
+                    Card data is unavailable or undefined.
+                  </div>
+                ) : (
+                  <Flashcard
+                    card={activeQuickReview}
+                    topicName={activeQuickReview.topicName}
+                    onFeedback={async (cardId, rating) => {
+                      if (!cardId) return;
+                      try {
+                        await api.submitCardReview(cardId, rating);
+                        setActiveQuickReview(null);
+                        loadData();
+                        setDataVersion(prev => prev + 1);
+                      } catch (err) {
+                        console.error("Failed to submit quick review:", err);
+                        addToast(err.message || 'Could not submit review');
+                      }
+                    }}
+                    showSkip={false}
+                  />
+                )}
+              </ErrorBoundary>
             </div>
           </div>
         </div>

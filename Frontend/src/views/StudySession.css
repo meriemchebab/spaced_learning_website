@@ -1,18 +1,65 @@
 .study-session-view {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 10px 0;
+  padding: 10px 0 30px 0;
 }
 
 .empty-session-card {
-  padding: 36px 24px;
+  padding: 48px 24px;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--sh);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(0,0,0,0.07));
+  border-radius: var(--r, 14px);
+  box-shadow: var(--sh-md);
 }
 
 .early-review-action {
-  margin-top: 20px;
+  margin-top: 24px;
+}
+
+.session-queue-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, rgba(0,0,0,0.07));
+  border-radius: var(--r-sm, 8px);
+  padding: 10px 16px;
+  box-shadow: var(--sh);
+}
+
+.queue-progress-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.queue-indicator {
+  font-size: 12px;
+  color: var(--text2, #6A6560);
+  font-family: 'DM Mono', monospace;
+}
+
+.queue-indicator strong {
+  color: var(--purple, #5B4FD4);
+}
+
+.queue-track {
+  width: 100%;
+  max-width: 220px;
+  height: 4px;
+  background: var(--surface2, #EEE9E1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.queue-fill {
+  height: 100%;
+  background: var(--purple, #5B4FD4);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }

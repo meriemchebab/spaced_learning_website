@@ -6,7 +6,8 @@ export const TopicChip = ({
   className = '',
   ...props
 }) => {
-  const normalizedType = type.toLowerCase();
+  const displayType = type === 'no_topic' ? 'No topic' : (type || 'question');
+  const normalizedType = String(displayType).toLowerCase();
   const classNames = [
     'ctype',
     `ct-${normalizedType}`,
@@ -15,7 +16,7 @@ export const TopicChip = ({
 
   return (
     <span className={classNames} {...props}>
-      {type}
+      {displayType}
     </span>
   );
 };

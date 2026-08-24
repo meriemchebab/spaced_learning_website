@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import Flashcard from '../components/complex/Flashcard';
 import Button from '../components/ui/Button';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
 import './StudySession.css';
 
 export const StudySession = ({
@@ -19,7 +20,7 @@ export const StudySession = ({
     const loadTopics = async () => {
       try {
         const allTopics = await api.fetchTopics();
-        setTopics(allTopics);
+        setTopics(Array.isArray(allTopics) ? allTopics : []);
       } catch (err) {
         console.error("Failed to load topics for study session:", err);
       }
@@ -29,7 +30,7 @@ export const StudySession = ({
   }, []);
 
   const resolveTopicName = (topicId) => {
-    const topic = topics.find((item) => item.id === topicId);
+    const topic = (topics || []).find((item) => item.id === topicId);
     return topic ? topic.name : 'No topic';
   };
 
@@ -37,11 +38,12 @@ export const StudySession = ({
     try {
       setLoading(true);
       const plan = await api.fetchDailyStudyPlan(topicId);
-      setQueue(plan);
+      setQueue(Array.isArray(plan) ? plan : []);
       setCurrentIndex(0);
       setIsEarlyReview(false);
     } catch (err) {
       console.error("Failed to load study plan:", err);
+      setQueue([]);
     } finally {
       setLoading(false);
     }
@@ -52,6 +54,7 @@ export const StudySession = ({
   }, [selectedTopicId]);
 
   const handleFeedback = async (cardId, rating) => {
+    if (!cardId) return;
     try {
       const response = await api.submitCardReview(cardId, rating);
       if (addToast) {
@@ -59,24 +62,40 @@ export const StudySession = ({
       }
 
       setQueue((prevQueue) => {
-        const nextQueue = prevQueue.filter((card) => card.id !== cardId);
+        const safePrev = Array.isArray(prevQueue) ? prevQueue : [];
+        const nextQueue = safePrev.filter((card) => card && card.id !== cardId);
         if (nextQueue.length === 0 && onSessionDone) {
           onSessionDone();
         }
         return nextQueue;
       });
       setCurrentIndex(0);
-      
-      if (queue.length <= 1 && onSessionDone) {
-        if (onSessionDone) onSessionDone();
-      }
     } catch (err) {
       console.error("Error submitting review:", err);
+      if (addToast) {
+        addToast(err.message || 'Error submitting review');
+      }
     }
   };
 
+  const safeQueue = Array.isArray(queue) ? queue : [];
+
   const handleSkip = () => {
-    setCurrentIndex(prev => prev + 1);
+    if (currentIndex < safeQueue.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNextCard = () => {
+    if (currentIndex < safeQueue.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
   };
 
   const handleReviewEarly = async () => {
@@ -85,16 +104,17 @@ export const StudySession = ({
       const allCards = await api.fetchCards(
         selectedTopicId ? { topicId: Number(selectedTopicId) } : {}
       );
+      const safeCards = Array.isArray(allCards) ? allCards : [];
       
       // Sort by lowest retention estimate first
       const getRetEst = (c) => {
-        if (!c.lastReview) return 100;
+        if (!c || !c.lastReview) return 100;
         const days = (Date.now() - c.lastReview) / 86400000;
-        const stab = c.interval * 1.4;
+        const stab = (c.interval || 1) * 1.4;
         return Math.round(Math.max(0, Math.min(100, Math.exp(-days / stab) * 100)));
       };
       
-      const sorted = [...allCards].sort((a, b) => getRetEst(a) - getRetEst(b));
+      const sorted = [...safeCards].sort((a, b) => getRetEst(a) - getRetEst(b));
       
       // Map to session format
       const formatted = sorted.map(c => ({
@@ -115,6 +135,7 @@ export const StudySession = ({
       setIsEarlyReview(true);
     } catch (err) {
       console.error("Failed to load cards for early review:", err);
+      setQueue([]);
     } finally {
       setLoading(false);
     }
@@ -124,7 +145,8 @@ export const StudySession = ({
     return <div className="loading-state">Loading review session...</div>;
   }
 
-  const isSessionFinished = queue.length === 0 || currentIndex >= queue.length;
+  const isSessionFinished = safeQueue.length === 0 || currentIndex >= safeQueue.length;
+  const currentCard = safeQueue[currentIndex] || null;
 
   return (
     <div className="study-session-view">
@@ -144,14 +166,50 @@ export const StudySession = ({
           </div>
         </div>
       ) : (
-          <Flashcard
-            card={queue[currentIndex]}
-            topicName={queue[currentIndex].topicName}
-            progressText={`Card ${currentIndex + 1} of ${queue.length}`}
-            onFeedback={handleFeedback}
-            onSkip={handleSkip}
-            showSkip={true}
-        />
+        <>
+          <div className="session-queue-nav">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              disabled={currentIndex === 0}
+              onClick={handlePrevCard}
+            >
+              ← Previous
+            </Button>
+            
+            <div className="queue-progress-bar">
+              <div className="queue-indicator">
+                Card <strong>{currentIndex + 1}</strong> of <strong>{safeQueue.length}</strong>
+              </div>
+              <div className="queue-track">
+                <div 
+                  className="queue-fill" 
+                  style={{ width: `${((currentIndex + 1) / safeQueue.length) * 100}%` }} 
+                />
+              </div>
+            </div>
+
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              disabled={currentIndex >= safeQueue.length - 1}
+              onClick={handleNextCard}
+            >
+              Next →
+            </Button>
+          </div>
+
+          <ErrorBoundary fallbackTitle="Could not display session card">
+            <Flashcard
+              card={currentCard}
+              topicName={currentCard?.topicName}
+              progressText={`Card ${currentIndex + 1} of ${safeQueue.length}`}
+              onFeedback={handleFeedback}
+              onSkip={handleSkip}
+              showSkip={true}
+            />
+          </ErrorBoundary>
+        </>
       )}
     </div>
   );

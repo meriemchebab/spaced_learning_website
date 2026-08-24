@@ -1,0 +1,43 @@
+.error-boundary-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 250px;
+  width: 100%;
+}
+
+.error-card {
+  background: var(--surface, #1e1e24);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 480px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.error-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text1, #ffffff);
+  margin: 0 0 8px 0;
+}
+
+.error-message {
+  font-size: 13px;
+  color: var(--text2, #a0a0ab);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}

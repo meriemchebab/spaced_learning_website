@@ -66,24 +66,44 @@ function normalizeExam(exam) {
 }
 
 function normalizeCard(card) {
+  if (!card || typeof card !== 'object') return null;
   const reviewMethodMap = {
     RC: 'RECALL',
     TS: 'TEST',
     RD: 'READ',
     WT: 'WATCH'
   };
-  const rawTopicId = card.topic?.id ?? card.topic_id ?? null;
+
+  let rawTopicId = null;
+  let rawTopicName = null;
+
+  if (typeof card.topic === 'object' && card.topic !== null) {
+    rawTopicId = card.topic.id ?? card.topic_id ?? null;
+    rawTopicName = card.topic.topic_name || card.topic.name || null;
+  } else if (typeof card.topic === 'string') {
+    rawTopicName = card.topic === 'no_topic' ? 'No topic' : card.topic;
+  } else if (typeof card.topic === 'number') {
+    rawTopicId = card.topic;
+  }
+
+  if (!rawTopicName && card.topic_name) {
+    rawTopicName = card.topic_name === 'no_topic' ? 'No topic' : card.topic_name;
+  }
+
+  const ctypeVal = String(card.card_type || card.ctype || 'question').toLowerCase();
+  const methodVal = reviewMethodMap[String(card.review_method || card.method || 'RC').toUpperCase()] || 'RECALL';
 
   return {
-    id: card.id,
-    question: card.question,
-    hint: card.context_hint || card.hint || '',
+    id: card.id ?? Math.random(),
+    question: card.question || 'Untitled Card',
+    hint: card.context_hint || card.hint || card.answer || '',
     topicId: rawTopicId !== null && rawTopicId !== undefined ? Number(rawTopicId) : null,
-    ctype: card.card_type?.toLowerCase() || card.ctype || 'question',
-    method: reviewMethodMap[String(card.review_method || card.method || 'RC').toUpperCase()] || 'RECALL',
+    topicName: rawTopicName || 'No topic',
+    ctype: ctypeVal,
+    method: methodVal,
     hasFile: Boolean(card.attached_file || card.fileName),
     fileName: card.attached_file || card.fileName || null,
-    retention: card.retention ?? 100,
+    retention: typeof card.retention === 'number' && !isNaN(card.retention) ? card.retention : 100,
     nextReview: card.due ? new Date(card.due).getTime() : null,
     lastReview: card.last_review ? new Date(card.last_review).getTime() : null,
     interval: card.interval ?? 1,
@@ -145,61 +165,76 @@ export const api = {
   isAuthenticated: () => !!localStorage.getItem('recall_token'),
 
   fetchDashboardStats: async () => {
-    const cards = await request('/api/cards/');
-    const topics = await request('/api/topics/');
-    const normalizedCards = (cards || []).map(normalizeCard);
-    const normalizedTopics = (topics || []).map(normalizeTopic);
+    try {
+      const cards = await request('/api/cards/');
+      const topics = await request('/api/topics/');
+      const normalizedCards = (cards || []).map(normalizeCard).filter(Boolean);
+      const normalizedTopics = (topics || []).map(normalizeTopic).filter(Boolean);
 
-    const now = Date.now();
-    const dueCards = normalizedCards.filter((card) => !card.nextReview || now >= card.nextReview);
-    const upcomingCards = normalizedCards
-      .filter((card) => card.nextReview && now < card.nextReview)
-      .sort((a, b) => a.nextReview - b.nextReview)
-      .slice(0, 6)
-      .map((card) => ({
-        id: card.id,
-        question: card.question,
-        ctype: card.ctype,
-        daysUntil: Math.ceil((card.nextReview - now) / 86400000)
-      }));
-
-    const avgRetention = normalizedCards.length
-      ? Math.round(normalizedCards.reduce((sum, card) => sum + (card.retention ?? 100), 0) / normalizedCards.length)
-      : 100;
-
-    return {
-      dueCount: dueCards.length,
-      doneToday: 0,
-      totalCards: normalizedCards.length,
-      avgRetention: `${avgRetention}%`,
-      streak: 0,
-      dueCards: dueCards.slice(0, 8).map((card) => {
-        const topic = normalizedTopics.find((item) => item.id === card.topicId);
-        return {
+      const now = Date.now();
+      const dueCards = normalizedCards.filter((card) => !card.nextReview || now >= card.nextReview);
+      const upcomingCards = normalizedCards
+        .filter((card) => card.nextReview && now < card.nextReview)
+        .sort((a, b) => a.nextReview - b.nextReview)
+        .slice(0, 6)
+        .map((card) => ({
           id: card.id,
           question: card.question,
-          topicId: card.topicId,
-          topicName: topic ? topic.name : 'No topic',
-          topicTag: topic ? topic.tag : 'other',
           ctype: card.ctype,
-          method: card.method,
-          retention: card.retention ?? 100
-        };
-      }),
-      upcomingCards,
-      history: [],
-      topics: normalizedTopics.map((topic) => {
-        const topicCards = normalizedCards.filter((card) => card.topicId === topic.id);
-        return {
-          ...topic,
-          cardCount: topicCards.length,
-          dueCount: topicCards.filter((card) => !card.nextReview || now >= card.nextReview).length,
-          avgRetention: topicCards.length
-            ? Math.round(topicCards.reduce((sum, card) => sum + (card.retention ?? 100), 0) / topicCards.length)
-            : 100
-        };
-      })
-    };
+          daysUntil: Math.ceil((card.nextReview - now) / 86400000)
+        }));
+
+      const avgRetention = normalizedCards.length
+        ? Math.round(normalizedCards.reduce((sum, card) => sum + (card.retention ?? 100), 0) / normalizedCards.length)
+        : 100;
+
+      return {
+        dueCount: dueCards.length,
+        doneToday: 0,
+        totalCards: normalizedCards.length,
+        avgRetention: `${avgRetention}%`,
+        streak: 0,
+        dueCards: dueCards.slice(0, 8).map((card) => {
+          const topic = normalizedTopics.find((item) => item.id === card.topicId);
+          return {
+            id: card.id,
+            question: card.question,
+            topicId: card.topicId,
+            topicName: topic ? topic.name : 'No topic',
+            topicTag: topic ? topic.tag : 'other',
+            ctype: card.ctype,
+            method: card.method,
+            retention: card.retention ?? 100
+          };
+        }),
+        upcomingCards,
+        history: [],
+        topics: normalizedTopics.map((topic) => {
+          const topicCards = normalizedCards.filter((card) => card.topicId === topic.id);
+          return {
+            ...topic,
+            cardCount: topicCards.length,
+            dueCount: topicCards.filter((card) => !card.nextReview || now >= card.nextReview).length,
+            avgRetention: topicCards.length
+              ? Math.round(topicCards.reduce((sum, card) => sum + (card.retention ?? 100), 0) / topicCards.length)
+              : 100
+          };
+        })
+      };
+    } catch (err) {
+      console.error("Error fetching dashboard stats:", err);
+      return {
+        dueCount: 0,
+        doneToday: 0,
+        totalCards: 0,
+        avgRetention: '100%',
+        streak: 0,
+        dueCards: [],
+        upcomingCards: [],
+        history: [],
+        topics: []
+      };
+    }
   },
 
   fetchDailyStudyPlan: async (topicId = null) => {
@@ -210,13 +245,13 @@ export const api = {
 
     try {
       const cards = await request(`/api/cards/today/${params.toString() ? `?${params.toString()}` : ''}`);
-      const normalizedCards = (cards || []).map(normalizeCard);
+      const normalizedCards = (cards || []).map(normalizeCard).filter(Boolean);
       return normalizedCards.sort(() => Math.random() - 0.5).map((card) => ({
         id: card.id,
         question: card.question,
         hint: card.hint,
         topicId: card.topicId,
-        topicName: 'Card',
+        topicName: card.topicName || 'Card',
         ctype: card.ctype,
         method: card.method,
         hasFile: card.hasFile,
@@ -224,14 +259,13 @@ export const api = {
         retention: card.retention ?? 100
       }));
     } catch (err) {
-      if (!String(err?.message || '').includes('404')) {
-        throw err;
-      }
+      console.error("Error fetching daily study plan:", err);
       return [];
     }
   },
 
   submitCardReview: async (cardId, rating) => {
+    if (!cardId) throw new Error("Invalid card ID");
     const response = await fetch(`${API_BASE_URL}/api/cards/${cardId}/ratings/${rating}/0/`, {
       method: 'POST',
       headers: getAuthHeaders()
@@ -252,13 +286,23 @@ export const api = {
   },
 
   fetchTopics: async () => {
-    const topics = await request('/api/topics/');
-    return (topics || []).map(normalizeTopic);
+    try {
+      const topics = await request('/api/topics/');
+      return (topics || []).map(normalizeTopic).filter(Boolean);
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+      return [];
+    }
   },
 
   fetchExams: async () => {
-    const exams = await request('/api/exams/');
-    return (exams || []).map(normalizeExam);
+    try {
+      const exams = await request('/api/exams/');
+      return (exams || []).map(normalizeExam).filter(Boolean);
+    } catch (err) {
+      console.error("Error fetching exams:", err);
+      return [];
+    }
   },
 
   addTopic: async (name, tag, notes) => {
@@ -274,25 +318,35 @@ export const api = {
   },
 
   fetchAnalytics: async () => {
-    return request('/api/analytics/');
+    try {
+      return await request('/api/analytics/');
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+      return {};
+    }
   },
 
   fetchCards: async (filters = {}) => {
-    const params = new URLSearchParams();
+    try {
+      const params = new URLSearchParams();
 
-    if (filters.topicId !== undefined && filters.topicId !== null && filters.topicId !== '') {
-      params.append('topic', filters.topicId);
+      if (filters.topicId !== undefined && filters.topicId !== null && filters.topicId !== '') {
+        params.append('topic', filters.topicId);
+      }
+      if (filters.type) params.append('type', toBackendCardType(filters.type));
+      if (filters.difficulty) params.append('difficulty', filters.difficulty);
+      if (filters.reviewType) params.append('review_type', filters.reviewType);
+      if (filters.date) params.append('date', filters.date);
+      if (filters.examId) params.append('exam', filters.examId);
+      if (filters.cardId) params.append('id', filters.cardId);
+
+      const queryString = params.toString();
+      const cards = await request(`/api/cards/${queryString ? `?${queryString}` : ''}`);
+      return (cards || []).map(normalizeCard).filter(Boolean);
+    } catch (err) {
+      console.error("Error fetching cards:", err);
+      return [];
     }
-    if (filters.type) params.append('type', toBackendCardType(filters.type));
-    if (filters.difficulty) params.append('difficulty', filters.difficulty);
-    if (filters.reviewType) params.append('review_type', filters.reviewType);
-    if (filters.date) params.append('date', filters.date);
-    if (filters.examId) params.append('exam', filters.examId);
-    if (filters.cardId) params.append('id', filters.cardId);
-
-    const queryString = params.toString();
-    const cards = await request(`/api/cards/${queryString ? `?${queryString}` : ''}`);
-    return (cards || []).map(normalizeCard);
   },
 
   addCard: async (cardData) => {

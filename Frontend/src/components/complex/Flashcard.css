@@ -1,7 +1,7 @@
 .flashcard-container {
-  perspective: 1000px;
+  perspective: 1200px;
   width: 100%;
-  max-width: 560px;
+  max-width: 580px;
   min-height: 440px;
   margin: 0 auto;
 }
@@ -9,9 +9,10 @@
 .flashcard {
   width: 100%;
   height: 100%;
+  min-height: 440px;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .flashcard.flipped {
@@ -19,20 +20,31 @@
 }
 
 .flashcard-front, .flashcard-back {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--sh-md);
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border2, rgba(0,0,0,0.12));
+  border-radius: var(--r, 14px);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 8px 24px -4px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0,0,0,0.02);
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.flashcard-front:hover, .flashcard-back:hover {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 16px 36px -6px rgba(0, 0, 0, 0.12);
+  border-color: rgba(91, 79, 212, 0.25);
 }
 
 .flashcard-back {
@@ -43,7 +55,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--border2, rgba(0,0,0,0.1));
 }
 
 .flashcard-body {
@@ -54,70 +68,73 @@
 }
 
 .sc-type-bar {
-  height: 3px;
+  height: 4px;
   border-radius: 2px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .sc-meta-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .session-q {
   font-family: 'Lora', serif;
-  font-size: 20px;
-  font-weight: 400;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--text);
-  margin-bottom: 18px;
+  font-size: 21px;
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1.55;
+  color: var(--text, #1C1A16);
+  margin-bottom: 20px;
 }
 
 .session-hint-container, .answer-section {
-  background: var(--surface2);
-  border-radius: 10px;
+  background: var(--surface2, #EEE9E1);
+  border: 1px solid var(--border, rgba(0,0,0,0.07));
+  border-radius: var(--r-sm, 8px);
   padding: 14px 16px;
   margin-bottom: 16px;
 }
 
 .session-hint-title, .answer-label {
-  font-size: 10.5px;
+  font-size: 11px;
   font-family: 'DM Mono', monospace;
   text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 5px;
-  letter-spacing: 0.05em;
+  color: var(--text3, #A09990);
+  margin-bottom: 6px;
+  letter-spacing: 0.06em;
 }
 
 .session-hint, .answer-content {
-  font-size: 13.5px;
-  color: var(--text2);
+  font-size: 14px;
+  color: var(--text2, #6A6560);
   line-height: 1.6;
 }
 
 .has-file-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--teal-l);
-  color: var(--teal);
-  padding: 6px 12px;
-  border-radius: 8px;
+  gap: 8px;
+  background: var(--teal-l, #E0F4F0);
+  color: var(--teal, #0F7B6C);
+  padding: 8px 14px;
+  border-radius: var(--r-sm, 8px);
   font-size: 12px;
   align-self: flex-start;
   margin-bottom: 16px;
   font-family: 'DM Mono', monospace;
-  border: 1px solid rgba(15, 123, 108, 0.15);
+  border: 1px solid rgba(15, 123, 108, 0.2);
 }
 
 .flashcard-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, rgba(0,0,0,0.07));
 }
 
 .flashcard-footer button {
@@ -130,34 +147,37 @@
 
 .flashcard-footer-feedback {
   margin-top: auto;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border, rgba(0,0,0,0.07));
   padding-top: 16px;
 }
 
 .feedback-label {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--text2);
-  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--text2, #6A6560);
+  margin-bottom: 12px;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', monospace;
 }
 
 .fb-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
 .fb-btn {
-  padding: 12px 0;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border2);
+  padding: 10px 4px;
+  border-radius: var(--r-sm, 8px);
+  border: 1px solid var(--border2, rgba(0,0,0,0.13));
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   font-family: 'Geist', sans-serif;
-  transition: all 0.13s;
-  background: var(--surface);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface, #FFFFFF);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -166,20 +186,24 @@
 
 .fb-btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.fb-hard { color: var(--red); }
-.fb-hard:hover { background: var(--red-l); border-color: var(--red); }
+.fb-again { color: #D9381E; }
+.fb-again:hover { background: #FDECEA; border-color: #D9381E; }
 
-.fb-good { color: var(--amber); }
-.fb-good:hover { background: var(--amber-l); border-color: var(--amber); }
+.fb-hard { color: var(--red, #BE3A2A); }
+.fb-hard:hover { background: var(--red-l, #FDECEA); border-color: var(--red, #BE3A2A); }
 
-.fb-easy { color: var(--green); }
-.fb-easy:hover { background: var(--green-l); border-color: var(--green); }
+.fb-good { color: var(--amber, #B5600A); }
+.fb-good:hover { background: var(--amber-l, #FEF2E0); border-color: var(--amber, #B5600A); }
+
+.fb-easy { color: var(--green, #2C7A50); }
+.fb-easy:hover { background: var(--green-l, #E6F4EE); border-color: var(--green, #2C7A50); }
 
 .fb-sub {
   font-size: 10px;
-  color: var(--text3);
-  margin-top: 2px;
+  color: var(--text3, #A09990);
+  margin-top: 3px;
   font-family: 'DM Mono', monospace;
 }

@@ -20,12 +20,18 @@ export const CalendarGrid = ({
   cards = [],
   topics = [],
   exams = [],
-  history = []
+  history = [],
+  onReviewCard
 }) => {
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDayTs, setSelectedDayTs] = useState(null);
   const [selectedDayLabel, setSelectedDayLabel] = useState('');
   const [selectedExamId, setSelectedExamId] = useState('');
+
+  const safeCards = Array.isArray(cards) ? cards : [];
+  const safeTopics = Array.isArray(topics) ? topics : [];
+  const safeExams = Array.isArray(exams) ? exams : [];
+  const safeHistory = Array.isArray(history) ? history : [];
 
   const now = new Date();
   const targetDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -38,11 +44,11 @@ export const CalendarGrid = ({
   const daysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
   
   const today = new Date();
-  const selectedExam = exams.find((exam) => String(exam.id) === String(selectedExamId));
+  const selectedExam = safeExams.find((exam) => String(exam.id) === String(selectedExamId));
   const examTopicIds = selectedExam ? new Set((selectedExam.topics || []).map(Number)) : null;
   const visibleCards = selectedExam
-    ? cards.filter((card) => examTopicIds.has(Number(card.topicId)))
-    : cards;
+    ? safeCards.filter((card) => card && examTopicIds.has(Number(card.topicId)))
+    : safeCards;
 
   // Create cell data
   const cells = [];
@@ -62,15 +68,15 @@ export const CalendarGrid = ({
     const dayEnd = dayStart + 86400000;
 
     // Cards scheduled specifically for this day
-    const dueCards = visibleCards.filter(c => c.nextReview && c.nextReview >= dayStart && c.nextReview < dayEnd);
+    const dueCards = visibleCards.filter(c => c && c.nextReview && c.nextReview >= dayStart && c.nextReview < dayEnd);
 
     // Overdue cards (if cell is today or in the past, cards whose nextReview is prior to dayStart)
     const isPastOrToday = cellDate <= today || isCellToday;
     const overdueCards = isPastOrToday
       ? visibleCards.filter(c => {
-          if (!c.nextReview) return false;
+          if (!c || !c.nextReview) return false;
           // nextReview is older than this day's start, and wasn't reviewed since
-          return c.nextReview < dayStart && !history.some(h => h.cardId === c.id && h.ts >= dayStart);
+          return c.nextReview < dayStart && !safeHistory.some(h => h && h.cardId === c.id && h.ts >= dayStart);
         })
       : [];
 
@@ -95,15 +101,15 @@ export const CalendarGrid = ({
   const getSelectedDayReviews = () => {
     if (!selectedDayTs) return [];
     const dayEnd = selectedDayTs + 86400000;
-    return visibleCards.filter(c => c.nextReview && c.nextReview >= selectedDayTs && c.nextReview < dayEnd);
+    return visibleCards.filter(c => c && c.nextReview && c.nextReview >= selectedDayTs && c.nextReview < dayEnd);
   };
 
   const selectedReviews = getSelectedDayReviews();
 
   const getRetEst = (card) => {
-    if (!card.lastReview) return 100;
+    if (!card || !card.lastReview) return 100;
     const days = (Date.now() - card.lastReview) / 86400000;
-    const stab = card.interval * 1.4;
+    const stab = (card.interval || 1) * 1.4;
     return Math.round(Math.max(0, Math.min(100, Math.exp(-days / stab) * 100)));
   };
 
@@ -132,7 +138,7 @@ export const CalendarGrid = ({
             }}
           >
             <option value="">All exams</option>
-            {exams.map((exam) => (
+            {safeExams.map((exam) => (
               <option key={exam.id} value={exam.id}>
                 {exam.name}
               </option>
@@ -179,10 +185,10 @@ export const CalendarGrid = ({
                 {cell.dueCards.length > 0 && (
                   <div className="cal-dot-row">
                     {cell.dueCards.slice(0, 3).map(c => {
-                      const topic = topics.find(t => t.id === c.topicId);
+                      const topic = safeTopics.find(t => t.id === c.topicId);
                       return (
                         <div 
-                          key={c.id} 
+                          key={c.id || Math.random()} 
                           className="cal-dot" 
                           style={{ background: TAG_COLORS[topic?.tag] || '#888' }} 
                         />
@@ -230,13 +236,27 @@ export const CalendarGrid = ({
                 <div className="cal-side-empty-list">No cards due or scheduled for this day</div>
               ) : (
                 selectedReviews.map(c => {
-                  const topic = topics.find(t => t.id === c.topicId);
+                  if (!c) return null;
+                  const topic = safeTopics.find(t => t.id === c.topicId);
                   const ret = getRetEst(c);
                   return (
-                    <div key={c.id} className="cal-side-item">
-                      <div className="cal-side-item-q">{c.question}</div>
+                    <div 
+                      key={c.id || Math.random()} 
+                      className="cal-side-item"
+                      style={{ cursor: onReviewCard ? 'pointer' : 'default' }}
+                      onClick={() => {
+                        if (onReviewCard && c) {
+                          onReviewCard({
+                            ...c,
+                            topicName: topic ? topic.name : (c.topicName || ''),
+                            retention: ret
+                          });
+                        }
+                      }}
+                    >
+                      <div className="cal-side-item-q">{c.question || 'Untitled Card'}</div>
                       <div className="cal-side-item-meta">
-                        <TopicChip type={c.ctype} />
+                        <TopicChip type={c.ctype || 'question'} />
                         <span style={{ color: retColor(ret), fontFamily: 'DM Mono', fontWeight: 500 }}>
                           {ret}%
                         </span>

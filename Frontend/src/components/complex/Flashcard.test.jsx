@@ -45,4 +45,14 @@ describe('Flashcard', () => {
     expect(onFeedback).toHaveBeenNthCalledWith(3, 1, 3);
     expect(onFeedback).toHaveBeenNthCalledWith(4, 1, 4);
   });
+
+  it('handles null or undefined card prop gracefully without crashing', () => {
+    render(<Flashcard card={null} />);
+    expect(screen.getByText(/no card data available/i)).toBeInTheDocument();
+  });
+
+  it('handles partially populated card objects without crashing', () => {
+    render(<Flashcard card={{}} />);
+    expect(screen.getAllByText(/no question text provided/i)[0]).toBeInTheDocument();
+  });
 });
