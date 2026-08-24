@@ -3,26 +3,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 20%, rgba(91, 79, 212, 0.12) 0%, rgba(13, 14, 18, 0.98) 70%), var(--bg);
+  background: var(--bg);
   padding: 24px;
 }
 
 .login-card {
   width: 100%;
   max-width: 440px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 36px 32px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(12px);
-  animation: fadeIn 0.3s ease-out;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 40px 36px;
+  box-shadow: var(--sh-md);
+  animation: fadeIn 0.25s ease-out;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -32,20 +31,20 @@
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
-.login-logo {
-  font-size: 36px;
-  margin-bottom: 8px;
-  display: inline-block;
-  filter: drop-shadow(0 0 12px rgba(91, 79, 212, 0.5));
+.login-logo-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
 .login-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text1);
+  font-family: 'Lora', Georgia, serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
   letter-spacing: -0.02em;
   margin-bottom: 6px;
 }
@@ -57,22 +56,22 @@
 }
 
 .login-error-banner {
-  background: rgba(222, 53, 11, 0.12);
-  border: 1px solid rgba(222, 53, 11, 0.3);
-  color: #ff6b6b;
-  padding: 12px 16px;
-  border-radius: 8px;
+  background: var(--red-l);
+  border: 1px solid rgba(190, 58, 42, 0.2);
+  color: var(--red);
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
   font-size: 13px;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .login-field {
@@ -82,7 +81,7 @@
 }
 
 .login-field label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text2);
   text-transform: uppercase;
@@ -91,36 +90,46 @@
 
 .login-input {
   width: 100%;
-  padding: 12px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text1);
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .login-input:focus {
+  background: var(--surface);
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(91, 79, 212, 0.2);
+  box-shadow: 0 0 0 3px var(--purple-l);
 }
 
 .login-submit-btn {
   width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  font-weight: 600;
+  padding: 11px;
+  margin-top: 6px;
+  font-weight: 500;
   font-size: 14px;
   justify-content: center;
+  background: var(--purple);
+  color: #fff;
+  border-radius: var(--r-sm);
+}
+
+.login-submit-btn:hover {
+  background: #4a3ebf;
 }
 
 .login-divider {
   display: flex;
   align-items: center;
-  margin: 24px 0;
+  margin: 20px 0;
   color: var(--text3);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
 }
 
 .login-divider::before,
@@ -131,20 +140,21 @@
 }
 
 .login-divider span {
-  padding: 0 12px;
+  padding: 0 10px;
 }
 
 .guest-login-btn {
   width: 100%;
-  padding: 11px;
+  padding: 10px;
   justify-content: center;
-  border-color: var(--border);
-  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: var(--r-sm);
 }
 
 .guest-login-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text1);
+  background: var(--surface3);
 }
 
 .login-footer-text {
@@ -152,4 +162,5 @@
   margin-top: 24px;
   font-size: 11px;
   color: var(--text3);
+  font-family: 'DM Mono', monospace;
 }
