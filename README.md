@@ -1,6 +1,6 @@
 # Spaced Learning Platform
 
-> A modern spaced repetition platform powered by the **FSRS (Free Spaced Repetition Scheduler)** algorithm. Built to optimize active recall, track reviews, and provide actionable learning analytics.
+> A modern spaced repetition platform powered by the **FSRS : <a href="https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler">Free Spaced Repetition Scheduler algorithm</a>** algorithm. Built to optimize active recall, track reviews, and provide actionable learning analytics.
 
 ![Status: Work in Progress](https://img.shields.io/badge/Status-Work_in_Progress-orange)
 
