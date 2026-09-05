@@ -77,7 +77,7 @@ The FSRS algorithm is a **machine-learning-based memory model** that replaces tr
 | Concept | Description |
 |---|---|
 | **Stability (S)** | The number of days after which retrievability drops to 90%. Trained via gradient descent. |
-| **Difficulty (D)** | A per-card difficulty score (1–10) that influences how quickly stability grows. |
+| **Difficulty (D)** | A per-card difficulty score (1–4) that influences how quickly stability grows. |
 | **Retrievability (R)** | The probability of successful recall at time *t*: `R(t, S) = (1 + 0.9803 × t/S)^(-0.1542)` |
 | **State Machine** | Cards transition through `Learning → Review → Relearning` based on ratings and lapse detection. |
 | **21 Parameters** | Model weights optimized on large-scale review datasets using stochastic gradient descent. |
