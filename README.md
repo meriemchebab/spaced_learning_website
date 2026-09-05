@@ -16,12 +16,12 @@
 
 ---
 
+
 ## About
 
-**Recall** is An intelligent spaced repetition platform that predicts exactly when you are about to forget something—ensuring you review material at the mathematically optimal time.
+Unlike standard flashcard applications that rely on static intervals, Recall uses a machine-learning-derived memory model to predict exactly when you are about to forget a piece of information. 
 
-Unlike basic flashcard apps that rely on static intervals, Recall integrates the **FSRS algorithm** — a next-generation scheduler whose 21 parameters are trained via deep learning (gradient descent on a stochastic recurrent model) to predict the probability of recall for any given card at any point in time. The system computes per-card **stability**, **difficulty**, and **retrievability** in real time, scheduling reviews at the mathematically optimal moment to achieve a target retention rate (default 90%).
-
+By analyzing your review history, the system dynamically computes per-card stability, difficulty, and retrievability. It then schedules future reviews at the mathematically optimal moment to maintain a target retention rate (defaulting to 90%), ensuring you spend time only on the material that actually needs reviewing.
 
 ---
 
