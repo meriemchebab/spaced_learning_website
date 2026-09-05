@@ -18,16 +18,10 @@
 
 ## About
 
-**Recall** is a spaced repetition web application built to demonstrate applied knowledge of **memory algorithms**, **machine-learning-based scheduling**, and **full-stack software engineering**.
+**Recall** is An intelligent spaced repetition platform that predicts exactly when you are about to forget something—ensuring you review material at the mathematically optimal time.
 
 Unlike basic flashcard apps that rely on static intervals, Recall integrates the **FSRS algorithm** — a next-generation scheduler whose 21 parameters are trained via deep learning (gradient descent on a stochastic recurrent model) to predict the probability of recall for any given card at any point in time. The system computes per-card **stability**, **difficulty**, and **retrievability** in real time, scheduling reviews at the mathematically optimal moment to achieve a target retention rate (default 90%).
 
-### Why This Project Matters
-
-- **Applied Machine Learning** — FSRS parameters are derived from neural network training on millions of review logs. This project integrates those parameters into a production backend, computing memory states (`R(t, S) = (1 + FACTOR × t/S)^DECAY`) in real time.
-- **Algorithm Engineering** — The backend handles state transitions (Learning → Review → Relearning), calculates retrievability decay curves, manages lapse detection, and supports configurable scheduler parameters per user.
-- **Data-Driven Analytics** — Built a custom analytics engine that computes retention rates, review velocity, learning growth curves, and card-type distributions from raw review logs.
-- **Production-Grade Architecture** — RESTful API design, JWT authentication, atomic database transactions, guest/user session management, and comprehensive test coverage.
 
 ---
 
@@ -143,18 +137,6 @@ spaced_learning_website/
 └── test/                    # Project-level test configurations
 ```
 
----
-
-
-
-## Key Concepts & Learning Outcomes
-
-- **Spaced Repetition Theory** — Implemented Ebbinghaus forgetting curves and the mathematical models behind optimal review scheduling.
-- **ML-Derived Algorithms** — Integrated a 21-parameter model trained with gradient descent on real-world review data.
-- **RESTful API Design** — Designed a comprehensive CRUD + analytics API following REST conventions with proper HTTP status codes and error handling.
-- **State Management** — Managed complex FSRS state transitions (Learning/Review/Relearning) with atomic database transactions to ensure data integrity.
-- **Authentication & Security** — Implemented JWT-based auth with refresh token rotation and CORS configuration.
-- **Guest Mode Architecture** — Engineered a dual-identity system supporting both authenticated users and anonymous guest sessions with full data isolation.
 
 ---
 
