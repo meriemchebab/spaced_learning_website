@@ -1,6 +1,7 @@
 .sidebar {
   width: 230px;
   flex-shrink: 0;
+  font-family: 'Comic Relief', cursive;
   background: linear-gradient(180deg, rgba(255, 253, 251, 0.96), rgba(239, 229, 220, 0.92));
   border-right: 1px solid var(--border);
   display: flex;
@@ -12,13 +13,17 @@
   z-index: 20;
 }
 
+.sidebar button {
+  font-family: 'Comic Relief', cursive;
+}
+
 .logo {
   padding: 22px 20px 18px;
   border-bottom: 1px solid var(--border);
 }
 
 .logo-name {
-  font-family: 'Lora', serif;
+  font-family: 'Comic Relief', cursive;
   font-size: 21px;
   font-weight: 400;
   color: var(--text);
@@ -27,7 +32,7 @@
 .logo-sub {
   font-size: 11px;
   color: var(--text3);
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
   margin-top: 1px;
 }
 
@@ -43,7 +48,7 @@
   color: var(--text3);
   text-transform: uppercase;
   letter-spacing: .08em;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
   padding: 10px 10px 4px;
 }
 
@@ -62,6 +67,7 @@
   background: none;
   width: 100%;
   text-align: left;
+  font-family: 'Comic Relief', cursive;
 }
 
 .nav-item:hover {
@@ -119,4 +125,5 @@
   font-size: 13px;
   color: var(--forest);
   font-weight: 500;
+  font-family: 'Comic Relief', cursive;
 }

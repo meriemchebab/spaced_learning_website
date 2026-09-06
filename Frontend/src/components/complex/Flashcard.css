@@ -81,7 +81,7 @@
 }
 
 .session-q {
-  font-family: 'Lora', serif;
+  font-family: 'Comic Relief', cursive;
   font-size: 21px;
   font-weight: 500;
   font-style: normal;
@@ -100,7 +100,7 @@
 
 .session-hint-title, .answer-label {
   font-size: 11px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
   text-transform: uppercase;
   color: var(--text3, #A09990);
   margin-bottom: 6px;
@@ -124,7 +124,7 @@
   font-size: 12px;
   align-self: flex-start;
   margin-bottom: 16px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
   border: 1px solid rgba(15, 123, 108, 0.2);
 }
 
@@ -159,7 +159,7 @@
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
 }
 
 .fb-row {
@@ -175,7 +175,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Geist', sans-serif;
+  font-family: 'Comic Relief', cursive;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--surface, #FFFFFF);
   display: flex;
@@ -205,5 +205,5 @@
   font-size: 10px;
   color: var(--text3, #A09990);
   margin-top: 3px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
 }

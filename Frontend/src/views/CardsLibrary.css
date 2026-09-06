@@ -27,7 +27,7 @@
   border: none;
   background: none;
   color: var(--text2);
-  font-family: 'Geist', sans-serif;
+  font-family: 'Comic Relief', cursive;
   transition: all .12s;
   text-transform: capitalize;
 }
@@ -46,7 +46,7 @@
   font-size: 12px;
   background: var(--surface);
   color: var(--text);
-  font-family: 'Geist', sans-serif;
+  font-family: 'Comic Relief', cursive;
   cursor: pointer;
   outline: none;
 }
@@ -96,7 +96,7 @@
 .sc-q {
   font-size: 14px;
   color: var(--text);
-  font-family: 'Lora', serif;
+  font-family: 'Comic Relief', cursive;
   font-style: italic;
   line-height: 1.5;
   margin-bottom: 10px;
@@ -120,5 +120,5 @@
 
 .sc-ret {
   font-size: 11px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
 }

@@ -41,7 +41,7 @@
 .queue-indicator {
   font-size: 12px;
   color: var(--text2, #6A6560);
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
 }
 
 .queue-indicator strong {

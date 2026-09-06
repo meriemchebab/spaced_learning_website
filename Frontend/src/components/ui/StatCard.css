@@ -14,7 +14,7 @@
   color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
   margin-bottom: 5px;
 }
 
@@ -22,7 +22,7 @@
   font-size: 25px;
   font-weight: 300;
   color: var(--text);
-  font-family: 'Lora', serif;
+  font-family: 'Comic Relief', cursive;
 }
 
 .stat-sub {

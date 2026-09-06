@@ -41,7 +41,7 @@
 }
 
 .login-title {
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Comic Relief', cursive;
   font-size: 26px;
   font-weight: 500;
   color: var(--text);
@@ -162,5 +162,5 @@
   margin-top: 24px;
   font-size: 11px;
   color: var(--text3);
-  font-family: 'DM Mono', monospace;
+  font-family: 'Comic Relief', cursive;
 }
