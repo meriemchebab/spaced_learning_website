@@ -92,23 +92,43 @@ function normalizeCard(card) {
 
   const ctypeVal = String(card.card_type || card.ctype || 'question').toLowerCase();
   const methodVal = reviewMethodMap[String(card.review_method || card.method || 'RC').toUpperCase()] || 'RECALL';
+  const lastReview = card.last_review ? new Date(card.last_review).getTime() : null;
+  const stability = Number.isFinite(Number(card.stability)) ? Number(card.stability) : null;
+  const elapsedDays = lastReview && stability > 0
+    ? Math.max(0, (Date.now() - lastReview) / 86400000)
+    : 0;
+  const calculatedRetention = stability > 0 && lastReview
+    ? Math.pow(1 + (0.9803464944134797 * elapsedDays) / stability, -0.1542) * 100
+    : 100;
+  const retention = typeof card.retention === 'number' && !Number.isNaN(card.retention)
+    ? card.retention
+    : calculatedRetention;
 
   return {
     id: card.id ?? Math.random(),
     question: card.question || 'Untitled Card',
+    answer: card.answer || '',
     hint: card.context_hint || card.hint || card.answer || '',
     topicId: rawTopicId !== null && rawTopicId !== undefined ? Number(rawTopicId) : null,
     topicName: rawTopicName || 'No topic',
     ctype: ctypeVal,
     method: methodVal,
-    hasFile: Boolean(card.attached_file || card.fileName),
-    fileName: card.attached_file || card.fileName || null,
-    retention: typeof card.retention === 'number' && !isNaN(card.retention) ? card.retention : 100,
+    hasFile: Boolean(card.attached_file || card.image || card.audio || card.fileName),
+    fileName: card.attached_file || card.image || card.audio || card.fileName || null,
+    image: card.image || null,
+    audio: card.audio || null,
+    retention: Math.max(0, Math.min(100, retention)),
     nextReview: card.due ? new Date(card.due).getTime() : null,
-    lastReview: card.last_review ? new Date(card.last_review).getTime() : null,
-    interval: card.interval ?? 1,
-    ef: card.ef ?? 2.5,
-    reps: card.reps ?? 0
+    lastReview,
+    interval: card.scheduled_days ?? card.interval ?? 0,
+    stability,
+    difficulty: card.difficulty ?? null,
+    step: card.step ?? 0,
+    elapsedDays: card.elapsed_days ?? 0,
+    scheduledDays: card.scheduled_days ?? 0,
+    reps: card.reps ?? 0,
+    lapses: card.lapses ?? 0,
+    state: card.state ?? null
   };
 }
 

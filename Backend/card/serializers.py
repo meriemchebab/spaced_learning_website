@@ -12,11 +12,17 @@ class CardSerializer(serializers.ModelSerializer):
         model = Card
         fields = [
             'id', 'question', 'answer', 'topic', 'topic_name', 'image', 'card_type', 'ctype',
-            'review_method', 'attached_file', 'audio', 'context_hint', 'due'
+            'review_method', 'attached_file', 'audio', 'context_hint', 'due',
+            'stability', 'difficulty', 'step', 'elapsed_days', 'scheduled_days',
+            'reps', 'lapses', 'state', 'last_review'
         ]
         extra_kwargs = {
             'topic': {'required': False, 'allow_null': True}
         }
+        read_only_fields = [
+            'due', 'stability', 'difficulty', 'step', 'elapsed_days',
+            'scheduled_days', 'reps', 'lapses', 'state', 'last_review'
+        ]
     def validate_qst(self,value : str):
         if(len(value))<5:
             raise serializers.ValidationError("the question is too smol to be valide")

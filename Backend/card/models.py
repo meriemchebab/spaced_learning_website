@@ -90,7 +90,7 @@ class Card(models.Model):
     guest = models.CharField(max_length=100,null=True)
 
     def __str__(self):
-        return self.question
+        return str(self.id)
 class ReviewLog(models.Model):
     """
     The historical ledger. Every time a user clicks Again, Hard, Good, or Easy, 
