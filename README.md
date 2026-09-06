@@ -1,64 +1,18 @@
-<h1 align="center">Recall — Intelligent Spaced Repetition Platform</h1>
+# Spaced Repetition Platform
 
-<p align="center">
-  <em>A full-stack learning platform powered by the **FSRS : <a href="https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler">Free Spaced Repetition Scheduler algorithm</a>** — a machine-learning-derived memory model that predicts optimal review timing to maximize long-term retention.</em>
-</p>
+A flashcard-based learning app powered by the [FSRS algorithm](https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler) ,it predicts the optimal time to review the matrial and schedules the card dates for optimal retantion based on how did the user rate the giving card.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/Django-6.0-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django"/>
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
-  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
-  <img src="https://img.shields.io/badge/FSRS-v5-FF6B6B?style=for-the-badge" alt="FSRS v5"/>
-  <img src="https://img.shields.io/badge/REST_API-DRF-A30000?style=for-the-badge" alt="DRF"/>
-  <img src="https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens" alt="JWT"/>
-</p>
+The app uses both the FSRS scheduler and its deep learning optimizer to adapt to each user's memory patterns.
 
----
+## Tech Stack
 
+- **Frontend:** React 19, Vite 8, Chart.js
+- **Backend:** Django 6.0, Django REST Framework
+- **Algorithm:** py-fsrs (FSRS v5)
+- **Auth:** JWT (SimpleJWT)
+- **Database:** SQLite
+- **Testing:** Vitest, Django TestCase
 
-## About
-
-Unlike standard flashcard applications that rely on static intervals, Recall uses a machine-learning-derived memory model to predict exactly when you are about to forget a piece of information. 
-
-By analyzing your review history, the system dynamically computes per-card stability, difficulty, and retrievability. It then schedules future reviews at the mathematically optimal moment to maintain a target retention rate (defaulting to 90%), ensuring you spend time only on the material that actually needs reviewing.
-
----
-
-## Screenshots
-
-### Dashboard — Study Hub & Deck Management
-> Real-time KPIs (cards due, retention rate, session progress) with topic deck cards showing per-deck retention estimates and review counts.
-
-![Dashboard](assets/fsrs.png)
-
----
-
-### Study Session — FSRS-Powered Flashcard Review
-> Active recall interface with 4-grade FSRS rating system (Again / Hard / Good / Easy). Each rating triggers the FSRS algorithm to recompute stability, difficulty, and the next optimal review date.
-
-![Flashcard Review](assets/card.png)
-
----
-
-### Analytics — Learning & Cumulative Growth Curve
-> Tracks mastered cards vs. cards in progress over time with study velocity metrics. KPI cards show total mastered count, active recall items, and daily learning rate.
-
-![Analytics Growth Curve](assets/analyse.png)
-
----
-
-### Analytics — Review Velocity & Card Distribution
-> Weekly review heatmap (bar chart) alongside a card-type distribution breakdown (Exercise, Concept, Mistake, Question, Note). Includes an interactive Forgetting Curve Simulator.
-
-![Analytics Detail](assets/analyse2.png)
-
----
-
-### Forgetting Curve Simulator
-> Interactive visualization of the Ebbinghaus forgetting curve with FSRS stability factors. Adjustable sliders for Stability (days) and Difficulty dynamically render the memory decay function and compute the optimal review point.
-
-![Forgetting Curve](assets/forget_curve.png)
 
 ---
 
@@ -77,20 +31,6 @@ The FSRS algorithm is a **machine-learning-based memory model** that replaces tr
 | **21 Parameters** | Model weights optimized on large-scale review datasets using stochastic gradient descent. |
 | **Target Retention** | Configurable per-user (default 90%). The scheduler solves for the interval where R = target. |
 
----
-
-## Tech Stack
-
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Frontend** | React 19, Vite 8 | Component-based SPA with hot module replacement |
-| **Data Visualization** | Chart.js, react-chartjs-2 | Growth curves, bar charts, doughnut charts, forgetting curves |
-| **Backend Framework** | Django 6.0, Django REST Framework | RESTful API, ORM, admin, migrations |
-| **Memory Algorithm** | py-fsrs | FSRS v5 scheduler with configurable 21-parameter model |
-| **Authentication** | SimpleJWT | Access/refresh token pair with secure CORS configuration |
-| **Database** | SQLite | Relational storage for cards, review logs, scheduler configs |
-| **Testing** | Vitest, Django TestCase | Frontend unit tests, backend API integration tests |
-| **Linting** | OxLint | Fast Rust-based JavaScript linter |
 
 ---
 
@@ -136,16 +76,60 @@ spaced_learning_website/
 ├── assets/                  # Project screenshots and documentation media
 └── test/                    # Project-level test configurations
 ```
+### Prerequisites
 
+  
+
+- Python 3.12+
+
+- Node.js 20+
+
+- npm 10+
+
+  
+
+### Backend Setup
+
+  
+
+```bash
+
+cd Backend
+
+python -m venv .venv
+
+.venv\Scripts\activate        # Windows
+
+source .venv/bin/activate     # macOS/Linux
+
+pip install -r requirements.txt
+
+python manage.py migrate
+
+python manage.py runserver
+
+```
+
+  
+
+### Frontend Setup
+
+  
+
+```bash
+
+cd Frontend
+
+npm install
+
+npm run dev
+
+```
+
+  
 
 ---
 
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
-
-
-
-<p align="center">
-  <strong>Built with ❤️ to learn, retain, and never forget.</strong>
-</p>
+[MIT](LICENSE)
