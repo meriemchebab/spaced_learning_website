@@ -55,11 +55,11 @@ export const CardsLibrary = ({
 
   const retColor = r => r > 65 ? 'var(--green)' : r > 35 ? 'var(--amber)' : 'var(--red)';
   const ctypeBarColors = {
-    exercise: 'var(--amber)',
-    concept: 'var(--purple)',
-    mistake: 'var(--red)',
-    question: 'var(--blue)',
-    note: 'var(--green)'
+    exercise: 'var(--aqua)',
+    concept: 'var(--aqua)',
+    mistake: 'var(--aqua)',
+    question: 'var(--aqua)',
+    note: 'var(--aqua)'
   };
 
   const isDue = (card) => {
@@ -105,7 +105,7 @@ export const CardsLibrary = ({
       <div className="cards-grid">
         {safeCards.length === 0 ? (
           <div className="empty" style={{ gridColumn: '1 / -1', padding: '60px 0' }}>
-            <div className="e-icon">🃏</div>
+            <div className="e-icon">—</div>
             <div className="e-title">No cards found</div>
             <div className="e-sub">Capture notes or concepts using the "+ Card" button.</div>
           </div>
@@ -139,7 +139,7 @@ export const CardsLibrary = ({
                 <div className="card-item-meta-row">
                   <TopicChip type={c.ctype} />
                   {due && <Badge variant="red">due</Badge>}
-                  {c.hasFile && <span className="attachment-icon">📎</span>}
+                  {c.hasFile && <svg className="attachment-icon" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 14l6-6c1.5-1.5 1.5-4 0-5.5s-4-1.5-5.5 0l-5 5c-1 1-1 2.5 0 3.5s2.5 1 3.5 0l5-5c.5-.5.5-1 0-1.5s-1-.5-1.5 0L5 9"/></svg>}
                 </div>
                 
                 <div className="sc-q">{c.question || 'Untitled Card'}</div>

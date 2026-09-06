@@ -13,11 +13,11 @@ const CTYPE_HINTS = {
 };
 
 const ctypeColors = {
-  exercise: 'var(--amber)',
-  concept: 'var(--purple)',
-  mistake: 'var(--red)',
-  question: 'var(--blue)',
-  note: 'var(--green)'
+  exercise: 'var(--aqua)',
+  concept: 'var(--aqua)',
+  mistake: 'var(--aqua)',
+  question: 'var(--aqua)',
+  note: 'var(--aqua)'
 };
 
 export const Flashcard = ({
@@ -123,7 +123,7 @@ export const Flashcard = ({
 
             {card.hasFile && (
               <div className="has-file-badge">
-                <span>📎</span>
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 14l6-6c1.5-1.5 1.5-4 0-5.5s-4-1.5-5.5 0l-5 5c-1 1-1 2.5 0 3.5s2.5 1 3.5 0l5-5c.5-.5.5-1 0-1.5s-1-.5-1.5 0L5 9"/></svg>
                 <span>{card.fileName || 'Attached Reference Document'}</span>
               </div>
             )}

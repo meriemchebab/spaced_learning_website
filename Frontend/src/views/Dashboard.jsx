@@ -9,11 +9,11 @@ import ErrorBoundary from '../components/ui/ErrorBoundary';
 import './Dashboard.css';
 
 const TAG_COLORS = {
-  math: '#7F77DD',
-  programming: '#378ADD',
-  science: '#1D9E75',
-  language: '#BA7517',
-  other: '#888780'
+  math: 'var(--purple)',
+  programming: 'var(--blue)',
+  science: 'var(--teal)',
+  language: 'var(--amber)',
+  other: 'var(--text3)'
 };
 
 export const Dashboard = ({ onReviewSubmitted, dataVersion, onStartTopicSession, onNavigate }) => {
@@ -105,7 +105,7 @@ export const Dashboard = ({ onReviewSubmitted, dataVersion, onStartTopicSession,
         <div className="decks-grid">
           {topics.length === 0 ? (
             <div className="empty" style={{ gridColumn: '1 / -1', padding: '40px 20px' }}>
-              <div className="e-icon">📚</div>
+              <div className="e-icon">—</div>
               <div className="e-title">No topic decks created yet</div>
               <div className="e-sub">Use the "+ Topic" button in the header to create your first deck.</div>
             </div>

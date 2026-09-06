@@ -4,11 +4,11 @@ import TopicChip from '../ui/TopicChip';
 import './CalendarGrid.css';
 
 const TAG_COLORS = {
-  math: '#7F77DD',
-  programming: '#378ADD',
-  science: '#1D9E75',
-  language: '#BA7517',
-  other: '#888780'
+  math: 'var(--purple)',
+  programming: 'var(--blue)',
+  science: 'var(--teal)',
+  language: 'var(--amber)',
+  other: 'var(--text3)'
 };
 
 const MONTHS = [

@@ -152,7 +152,7 @@ export const StudySession = ({
     <div className="study-session-view">
       {isSessionFinished ? (
         <div className="card empty-session-card">
-          <div className="e-icon">✨</div>
+          <div className="e-icon">—</div>
           <div className="e-title">Nothing due right now</div>
           <div className="e-sub">
             {isEarlyReview 

@@ -10,10 +10,10 @@
   white-space: nowrap;
 }
 
-.b-purple { background: var(--purple-l); color: var(--purple); }
-.b-teal { background: var(--teal-l); color: var(--teal); }
-.b-amber { background: var(--amber-l); color: var(--amber); }
+.b-purple { background: var(--forest-l); color: var(--forest); }
+.b-teal { background: var(--forest-l); color: var(--forest); }
+.b-amber { background: var(--forest-l); color: var(--forest); }
 .b-red { background: var(--red-l); color: var(--red); }
-.b-blue { background: var(--blue-l); color: var(--blue); }
-.b-green { background: var(--green-l); color: var(--green); }
+.b-blue { background: var(--forest-l); color: var(--forest); }
+.b-green { background: var(--forest-l); color: var(--forest); }
 .b-gray { background: var(--surface2); color: var(--text2); }

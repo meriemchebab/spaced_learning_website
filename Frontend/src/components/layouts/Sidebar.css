@@ -1,7 +1,7 @@
 .sidebar {
   width: 230px;
   flex-shrink: 0;
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(255, 253, 251, 0.96), rgba(239, 229, 220, 0.92));
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -70,8 +70,8 @@
 }
 
 .nav-item.active {
-  background: var(--purple-l);
-  color: var(--purple);
+  background: var(--aqua-l);
+  color: var(--forest);
   font-weight: 500;
 }
 
@@ -114,9 +114,9 @@
   align-items: center;
   gap: 8px;
   padding: 9px 12px;
-  background: var(--amber-l);
+  background: linear-gradient(135deg, var(--ochre-l), var(--aqua-l));
   border-radius: var(--r-sm);
   font-size: 13px;
-  color: var(--amber);
+  color: var(--forest);
   font-weight: 500;
 }

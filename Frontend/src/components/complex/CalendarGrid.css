@@ -140,7 +140,7 @@
 
 .legend-overdue {
   background: var(--red-l);
-  border: 1px solid #F09595;
+  border: 1px solid var(--red);
 }
 
 .legend-today {

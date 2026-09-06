@@ -30,6 +30,10 @@ function calculateForgettingProbability(day, stability, difficulty) {
   return Math.exp(-day / (stability * (1.5 - d * 0.8)));
 }
 
+const getThemeColor = (varName) => {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+};
+
 export const ForgettingCurveChart = ({ initialStability, initialDifficulty }) => {
   const [stability, setStability] = useState(() => (
     Number.isFinite(initialStability) ? Math.max(1, Math.min(60, Math.round(initialStability))) : 14
@@ -54,8 +58,8 @@ export const ForgettingCurveChart = ({ initialStability, initialDifficulty }) =>
       {
         label: 'Retention Probability',
         data: probabilities,
-        borderColor: '#5B4FD4',
-        backgroundColor: 'rgba(91, 79, 212, 0.07)',
+        borderColor: getThemeColor('--aqua'),
+        backgroundColor: `${getThemeColor('--aqua')}12`,
         fill: true,
         borderWidth: 2,
         pointRadius: 0,
@@ -64,16 +68,16 @@ export const ForgettingCurveChart = ({ initialStability, initialDifficulty }) =>
       {
         label: 'Optimal Review Point',
         data: days.map(d => d === thresholdDay ? probabilities[d] : null),
-        borderColor: '#BE3A2A',
+        borderColor: getThemeColor('--coral'),
         pointStyle: 'circle',
         pointRadius: 6,
-        pointBackgroundColor: '#BE3A2A',
+        pointBackgroundColor: getThemeColor('--coral'),
         showLine: false,
       },
       {
         label: '85% Target Threshold',
         data: days.map(() => 85),
-        borderColor: 'rgba(190, 58, 42, 0.3)',
+        borderColor: `${getThemeColor('--coral')}4D`,
         borderWidth: 1,
         borderDash: [4, 4],
         pointRadius: 0,
@@ -100,16 +104,16 @@ export const ForgettingCurveChart = ({ initialStability, initialDifficulty }) =>
         min: 0,
         max: 100,
         ticks: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           callback: (value) => value + '%'
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.04)'
+          color: `${getThemeColor('--border')}`
         }
       },
       x: {
         ticks: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           callback: (value) => value % 10 === 0 ? value + 'd' : ''
         },
         grid: {

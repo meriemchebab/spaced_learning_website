@@ -8,7 +8,10 @@
 
 body {
   font-family: 'Geist', sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(81, 159, 173, 0.12), transparent 35%),
+    radial-gradient(circle at top right, rgba(206, 149, 75, 0.12), transparent 28%),
+    linear-gradient(180deg, #fbf7f3 0%, var(--bg) 48%, #f4ede7 100%);
   color: var(--text);
   font-size: 15px;
   line-height: 1.6;

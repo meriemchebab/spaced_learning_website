@@ -45,7 +45,7 @@
 }
 
 .queue-indicator strong {
-  color: var(--purple, #5B4FD4);
+  color: var(--aqua);
 }
 
 .queue-track {
@@ -59,7 +59,7 @@
 
 .queue-fill {
   height: 100%;
-  background: var(--purple, #5B4FD4);
+  background: var(--aqua);
   border-radius: 2px;
   transition: width 0.3s ease;
 }

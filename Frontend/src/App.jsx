@@ -476,9 +476,9 @@ function App() {
                   className={`file-upload-area ${cardAttachedFile ? 'has-file' : ''}`}
                   onClick={() => document.getElementById('app-file-inp').click()}
                 >
-                  <div style={{ fontSize: '20px', marginBottom: '4px', opacity: 0.4 }}>📎</div>
+                  <div style={{ fontSize: '20px', marginBottom: '4px', opacity: 0.4 }}><svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M7 14l6-6c1.5-1.5 1.5-4 0-5.5s-4-1.5-5.5 0l-5 5c-1 1-1 2.5 0 3.5s2.5 1 3.5 0l5-5c.5-.5.5-1 0-1.5s-1-.5-1.5 0L5 9"/></svg></div>
                   <div className="file-label">
-                    {cardAttachedFile ? `📎 ${cardAttachedFile.name}` : 'Click to attach a file, exam paper, or photo'}
+                    {cardAttachedFile ? cardAttachedFile.name : 'Click to attach a file, exam paper, or photo'}
                   </div>
                 </div>
                 <input 

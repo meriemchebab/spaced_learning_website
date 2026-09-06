@@ -44,7 +44,7 @@
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.06),
     0 16px 36px -6px rgba(0, 0, 0, 0.12);
-  border-color: rgba(91, 79, 212, 0.25);
+  border-color: var(--aqua);
 }
 
 .flashcard-back {
@@ -189,8 +189,8 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.fb-again { color: #D9381E; }
-.fb-again:hover { background: #FDECEA; border-color: #D9381E; }
+.fb-again { color: var(--red); }
+.fb-again:hover { background: var(--red-l); border-color: var(--red); }
 
 .fb-hard { color: var(--red, #BE3A2A); }
 .fb-hard:hover { background: var(--red-l, #FDECEA); border-color: var(--red, #BE3A2A); }

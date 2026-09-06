@@ -73,7 +73,7 @@
 .deck-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--sh-md);
-  border-color: rgba(91, 79, 212, 0.3);
+  border-color: var(--aqua);
 }
 
 .deck-card-head {

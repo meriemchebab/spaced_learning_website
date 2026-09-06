@@ -2,11 +2,11 @@ import React from 'react';
 import './Sidebar.css';
 
 const TAG_COLORS = {
-  math: '#7F77DD',
-  programming: '#378ADD',
-  science: '#1D9E75',
-  language: '#BA7517',
-  other: '#888780'
+  math: 'var(--purple)',
+  programming: 'var(--blue)',
+  science: 'var(--teal)',
+  language: 'var(--amber)',
+  other: 'var(--text3)'
 };
 
 export const Sidebar = ({
@@ -87,10 +87,10 @@ export const Sidebar = ({
         ))}
       </nav>
       <div className="sidebar-footer">
-        <div className="streak">🔥 <span>{streak} day streak</span></div>
+        <div className="streak"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 1C6 5 2 6 2 10a6 6 0 0012 0c0-3-2-5-4-5 0 2-1 3-2 3s-1-2 0-7z"/></svg> <span>{streak} day streak</span></div>
         <div className="user-profile-row" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>👤</span>
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 2.5-5 6-5s6 2 6 5"/></svg>
             <span style={{ fontWeight: 500, color: 'var(--text1)' }}>{currentUser}</span>
           </div>
           {onLogout && (

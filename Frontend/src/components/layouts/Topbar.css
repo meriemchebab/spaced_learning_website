@@ -4,7 +4,8 @@
   justify-content: space-between;
   padding: 18px 30px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: rgba(255, 253, 251, 0.78);
+  backdrop-filter: blur(10px);
   gap: 16px;
 }
 
@@ -13,6 +14,7 @@
   font-size: 19px;
   font-weight: 400;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .topbar-actions {

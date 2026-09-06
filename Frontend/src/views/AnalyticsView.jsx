@@ -25,6 +25,10 @@ ChartJS.register(
   Legend
 );
 
+const getThemeColor = (varName) => {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+};
+
 export const AnalyticsView = () => {
   const [analytics, setAnalytics] = useState(null);
   const [history, setHistory] = useState([]);
@@ -75,8 +79,8 @@ export const AnalyticsView = () => {
       {
         label: 'Reviews Completed',
         data: weekCounts,
-        backgroundColor: 'rgba(91, 79, 212, 0.45)',
-        borderColor: '#5B4FD4',
+        backgroundColor: `${getThemeColor('--aqua')}50`,
+        borderColor: getThemeColor('--aqua'),
         borderWidth: 1.5,
         borderRadius: 6
       }
@@ -98,8 +102,8 @@ export const AnalyticsView = () => {
     datasets: [
       {
         data: Object.values(ctypeCount),
-        backgroundColor: ['rgba(230, 160, 40, 0.3)', 'rgba(91, 79, 212, 0.3)', 'rgba(222, 53, 11, 0.3)', 'rgba(55, 138, 221, 0.3)', 'rgba(29, 158, 117, 0.3)'],
-        borderColor: ['var(--amber)', 'var(--purple)', 'var(--red)', 'var(--blue)', 'var(--green)'],
+        backgroundColor: [`${getThemeColor('--amber')}4D`, `${getThemeColor('--purple')}4D`, `${getThemeColor('--red')}4D`, `${getThemeColor('--blue')}4D`, `${getThemeColor('--green')}4D`],
+        borderColor: [getThemeColor('--amber'), getThemeColor('--purple'), getThemeColor('--red'), getThemeColor('--blue'), getThemeColor('--green')],
         borderWidth: 1.5
       }
     ]
@@ -119,8 +123,8 @@ export const AnalyticsView = () => {
     datasets: [
       {
         data: Object.values(ratingCount),
-        backgroundColor: ['rgba(222, 53, 11, 0.3)', 'rgba(230, 160, 40, 0.3)', 'rgba(55, 138, 221, 0.3)', 'rgba(29, 158, 117, 0.3)'],
-        borderColor: ['var(--red)', 'var(--amber)', 'var(--blue)', 'var(--green)'],
+        backgroundColor: [`${getThemeColor('--red')}4D`, `${getThemeColor('--amber')}4D`, `${getThemeColor('--blue')}4D`, `${getThemeColor('--green')}4D`],
+        borderColor: [getThemeColor('--red'), getThemeColor('--amber'), getThemeColor('--blue'), getThemeColor('--green')],
         borderWidth: 1.5,
         borderRadius: 6
       }
@@ -136,11 +140,11 @@ export const AnalyticsView = () => {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { color: '#A09990', stepSize: 2 },
-        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        ticks: { color: getThemeColor('--text3'), stepSize: 2 },
+        grid: { color: `${getThemeColor('--border')}` }
       },
       x: {
-        ticks: { color: '#A09990' },
+        ticks: { color: getThemeColor('--text3') },
         grid: { display: false }
       }
     }
@@ -154,7 +158,7 @@ export const AnalyticsView = () => {
         display: true,
         position: 'bottom',
         labels: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           font: { size: 11 },
           padding: 10
         }

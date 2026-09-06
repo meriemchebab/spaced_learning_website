@@ -41,7 +41,7 @@ export const TopicsLibrary = ({ onSelectTopic }) => {
       <div className="topics-grid">
         {topics.length === 0 ? (
           <div className="empty" style={{ gridColumn: '1 / -1', padding: '60px 0' }}>
-            <div className="e-icon">📚</div>
+            <div className="e-icon">—</div>
             <div className="e-title">No topics yet</div>
             <div className="e-sub">Click "+ Topic" in the top bar to create your first subject.</div>
           </div>

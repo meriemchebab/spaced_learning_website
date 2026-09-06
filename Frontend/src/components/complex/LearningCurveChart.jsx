@@ -24,6 +24,10 @@ ChartJS.register(
   Filler
 );
 
+const getThemeColor = (varName) => {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+};
+
 export const LearningCurveChart = ({ curve = [] }) => {
   const [period, setPeriod] = useState('30d');
 
@@ -56,8 +60,8 @@ export const LearningCurveChart = ({ curve = [] }) => {
       {
         label: 'Cards Reviewed',
         data: reviewedData,
-        borderColor: '#1D9E75',
-        backgroundColor: 'rgba(29, 158, 117, 0.1)',
+        borderColor: getThemeColor('--green'),
+        backgroundColor: `${getThemeColor('--green')}1A`,
         fill: true,
         borderWidth: 2,
         tension: 0.35,
@@ -67,8 +71,8 @@ export const LearningCurveChart = ({ curve = [] }) => {
       {
         label: 'Cards In Progress',
         data: learningData,
-        borderColor: '#378ADD',
-        backgroundColor: 'rgba(55, 138, 221, 0.05)',
+        borderColor: getThemeColor('--blue'),
+        backgroundColor: `${getThemeColor('--blue')}0D`,
         fill: true,
         borderWidth: 2,
         tension: 0.35,
@@ -87,7 +91,7 @@ export const LearningCurveChart = ({ curve = [] }) => {
         position: 'top',
         align: 'end',
         labels: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           boxWidth: 12,
           font: { size: 11 }
         }
@@ -102,16 +106,16 @@ export const LearningCurveChart = ({ curve = [] }) => {
       y: {
         beginAtZero: true,
         ticks: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           stepSize: 5
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)'
+          color: `${getThemeColor('--border')}`
         }
       },
       x: {
         ticks: {
-          color: '#A09990',
+          color: getThemeColor('--text3'),
           maxTicksLimit: 8
         },
         grid: {

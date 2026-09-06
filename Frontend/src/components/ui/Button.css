@@ -15,12 +15,13 @@
 }
 
 .btn-primary {
-  background: var(--text);
+  background: linear-gradient(135deg, var(--forest), var(--aqua-d));
   color: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 68, 84, 0.14);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3a3730;
+  filter: brightness(1.04);
   transform: translateY(-1px);
 }
 
@@ -31,7 +32,8 @@
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--surface2);
+  background: var(--aqua-l);
+  border-color: rgba(81, 159, 173, 0.3);
 }
 
 .btn-sm {

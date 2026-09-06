@@ -10,8 +10,8 @@
 .login-card {
   width: 100%;
   max-width: 440px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  background: linear-gradient(180deg, rgba(255, 253, 251, 0.98), rgba(245, 236, 227, 0.92));
+  border: 1px solid rgba(15, 68, 84, 0.14);
   border-radius: var(--r);
   padding: 40px 36px;
   box-shadow: var(--sh-md);
@@ -57,7 +57,7 @@
 
 .login-error-banner {
   background: var(--red-l);
-  border: 1px solid rgba(190, 58, 42, 0.2);
+  border: 1px solid rgba(184, 77, 66, 0.18);
   color: var(--red);
   padding: 10px 14px;
   border-radius: var(--r-sm);
@@ -102,8 +102,8 @@
 
 .login-input:focus {
   background: var(--surface);
-  border-color: var(--purple);
-  box-shadow: 0 0 0 3px var(--purple-l);
+  border-color: var(--aqua);
+  box-shadow: 0 0 0 3px rgba(81, 159, 173, 0.18);
 }
 
 .login-submit-btn {
@@ -113,13 +113,13 @@
   font-weight: 500;
   font-size: 14px;
   justify-content: center;
-  background: var(--purple);
+  background: linear-gradient(135deg, var(--forest), var(--aqua-d));
   color: #fff;
   border-radius: var(--r-sm);
 }
 
 .login-submit-btn:hover {
-  background: #4a3ebf;
+  filter: brightness(1.03);
 }
 
 .login-divider {
