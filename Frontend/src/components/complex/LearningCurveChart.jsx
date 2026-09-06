@@ -24,49 +24,38 @@ ChartJS.register(
   Filler
 );
 
-export const LearningCurveChart = () => {
+export const LearningCurveChart = ({ curve = [] }) => {
   const [period, setPeriod] = useState('30d');
 
-  // Dummy / Scaffolded data generator for learning progress velocity
   const getDataForPeriod = (selectedPeriod) => {
     let daysCount = 30;
     if (selectedPeriod === '7d') daysCount = 7;
     if (selectedPeriod === '90d') daysCount = 90;
 
-    const labels = [];
-    const masteredData = [];
-    const learningData = [];
-
-    let currentMastered = 12;
-    let currentLearning = 5;
-
-    for (let i = daysCount; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      labels.push(`${d.getMonth() + 1}/${d.getDate()}`);
-
-      currentMastered += Math.floor(Math.random() * 3);
-      currentLearning += Math.floor(Math.random() * 2);
-
-      masteredData.push(currentMastered);
-      learningData.push(currentLearning);
-    }
-
-    return { labels, masteredData, learningData };
+    const points = curve.slice(-daysCount);
+    return {
+      labels: points.map(point => {
+        const date = new Date(`${point.date}T00:00:00`);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }),
+      reviewedData: points.map(point => point.reviewed_cards || 0),
+      learningData: points.map(point => point.in_progress || 0),
+      reviewCount: points.reduce((total, point) => total + (point.reviews || 0), 0)
+    };
   };
 
-  const { labels, masteredData, learningData } = getDataForPeriod(period);
+  const { labels, reviewedData, learningData, reviewCount } = getDataForPeriod(period);
 
-  const totalMastered = masteredData[masteredData.length - 1] || 0;
+  const totalReviewed = reviewedData[reviewedData.length - 1] || 0;
   const totalLearning = learningData[learningData.length - 1] || 0;
-  const totalVelocity = Math.round((totalMastered / (labels.length || 1)) * 10) / 10;
+  const totalVelocity = Math.round((reviewCount / (labels.length || 1)) * 10) / 10;
 
   const data = {
     labels,
     datasets: [
       {
-        label: 'Mastered Cards',
-        data: masteredData,
+        label: 'Cards Reviewed',
+        data: reviewedData,
         borderColor: '#1D9E75',
         backgroundColor: 'rgba(29, 158, 117, 0.1)',
         fill: true,
@@ -166,9 +155,9 @@ export const LearningCurveChart = () => {
 
       <div className="lc-metrics-grid">
         <div className="lc-metric-tile">
-          <span className="lc-metric-label">Total Mastered</span>
-          <span className="lc-metric-val" style={{ color: 'var(--green)' }}>{totalMastered}</span>
-          <span className="lc-metric-sub">retention &gt; 85%</span>
+          <span className="lc-metric-label">Cards Reviewed</span>
+          <span className="lc-metric-val" style={{ color: 'var(--green)' }}>{totalReviewed}</span>
+          <span className="lc-metric-sub">unique cards reviewed</span>
         </div>
         <div className="lc-metric-tile">
           <span className="lc-metric-label">In Progress</span>
@@ -178,7 +167,7 @@ export const LearningCurveChart = () => {
         <div className="lc-metric-tile">
           <span className="lc-metric-label">Study Velocity</span>
           <span className="lc-metric-val" style={{ color: 'var(--purple)' }}>{totalVelocity}/d</span>
-          <span className="lc-metric-sub">new concepts/day</span>
+          <span className="lc-metric-sub">reviews per day</span>
         </div>
       </div>
 

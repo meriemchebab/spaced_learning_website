@@ -30,9 +30,13 @@ function calculateForgettingProbability(day, stability, difficulty) {
   return Math.exp(-day / (stability * (1.5 - d * 0.8)));
 }
 
-export const ForgettingCurveChart = () => {
-  const [stability, setStability] = useState(14);
-  const [difficulty, setDifficulty] = useState(5);
+export const ForgettingCurveChart = ({ initialStability, initialDifficulty }) => {
+  const [stability, setStability] = useState(() => (
+    Number.isFinite(initialStability) ? Math.max(1, Math.min(60, Math.round(initialStability))) : 14
+  ));
+  const [difficulty, setDifficulty] = useState(() => (
+    Number.isFinite(initialDifficulty) ? Math.max(1, Math.min(10, Math.round(initialDifficulty))) : 5
+  ));
 
   const days = Array.from({ length: 60 }, (_, i) => i);
   const probabilities = days.map(d => 

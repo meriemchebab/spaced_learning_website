@@ -274,7 +274,8 @@ class AnalyticsView(APIView):
                 log_filter = {'card_id__guest': None}
 
         # 1. Total Cards Studied: Count from ReviewLog model
-        total_cards_studied = ReviewLog.objects.filter(**log_filter).count()
+        review_logs = ReviewLog.objects.filter(**log_filter).select_related('card_id').order_by('review_datetime')
+        total_cards_studied = review_logs.count()
 
         # 2. Overall Retention Rate: Average FSRS retrievability (R) of cards in "Review" state
         review_cards = Card.objects.filter(**card_filter, state=Card.FSRSState.REVIEW)
@@ -309,6 +310,75 @@ class AnalyticsView(APIView):
         due_today = user_cards.filter(due__date__lte=today).count()
         due_tomorrow = user_cards.filter(due__date=tomorrow).count()
 
+        rating_names = {
+            ReviewLog.FSRSRating.AGAIN: 'again',
+            ReviewLog.FSRSRating.HARD: 'hard',
+            ReviewLog.FSRSRating.GOOD: 'good',
+            ReviewLog.FSRSRating.EASY: 'easy',
+        }
+        card_type_names = {
+            Card.CardType.EXERCISE: 'exercise',
+            Card.CardType.MISTAKE: 'mistake',
+            Card.CardType.CONCEPT: 'concept',
+            Card.CardType.NOTE: 'note',
+            Card.CardType.QUESTION: 'question',
+        }
+
+        rating_counts = {name: 0 for name in rating_names.values()}
+        try:
+            for log in review_logs:
+                rat = ReviewLog.FSRSRating(log.rating)
+                rating_name = rating_names.get(rat)
+                if rating_name:
+                    rating_counts[rating_name] += 1
+        except Exception as e:
+            print("there is error in the analytics viw : e")
+        card_type_counts = {name: 0 for name in card_type_names.values()}
+        for card in user_cards:
+            card_type_name = card_type_names.get(Card.CardType(card.card_type))
+            if card_type_name:
+                card_type_counts[card_type_name] += 1
+
+        # Build a real cumulative review series for the last 90 days.
+        curve_start = today - timedelta(days=89)
+        curve_logs = [log for log in review_logs if log.review_datetime.date() >= curve_start]
+        daily_reviews = {}
+        daily_cards = {}
+        for log in curve_logs:
+            review_date = log.review_datetime.date().isoformat()
+            daily_reviews[review_date] = daily_reviews.get(review_date, 0) + 1
+            daily_cards.setdefault(review_date, set()).add(log.card_id.pk)
+
+        reviewed_card_ids = set()
+        learning_curve = []
+        for day_offset in range(90):
+            curve_date = curve_start + timedelta(days=day_offset)
+            date_key = curve_date.isoformat()
+            reviewed_card_ids.update(daily_cards.get(date_key, set()))
+            learning_curve.append({
+                "date": date_key,
+                "reviews": daily_reviews.get(date_key, 0),
+                "reviewed_cards": len(reviewed_card_ids),
+                "in_progress": user_cards.exclude(state=Card.FSRSState.REVIEW).count(),
+            })
+
+        state_counts = {
+            "learning": user_cards.filter(state=Card.FSRSState.LEARNING).count(),
+            "review": user_cards.filter(state=Card.FSRSState.REVIEW).count(),
+            "relearning": user_cards.filter(state=Card.FSRSState.RELEARNING).count(),
+        }
+        stability_values = [card.stability for card in user_cards if card.stability is not None and card.stability > 0]
+        difficulty_values = [card.difficulty for card in user_cards if card.difficulty is not None]
+        history = [
+            {
+                "ts": int(log.review_datetime.timestamp() * 1000),
+                "card_id": log.card_id.pk,
+                "ctype": card_type_names.get(Card.CardType(log.card_id.card_type), 'question'),
+                "rating": rating_names.get(ReviewLog.FSRSRating(log.rating)),
+            }
+            for log in review_logs
+        ]
+
         return Response({
             "total_cards_studied": total_cards_studied,
             "overall_retention_rate": round(overall_retention_rate * 100, 2),  # Returned as percentage (e.g. 88.5)
@@ -316,7 +386,14 @@ class AnalyticsView(APIView):
             "upcoming_workload": {
                 "due_today": due_today,
                 "due_tomorrow": due_tomorrow
-            }
+            },
+            "history": history,
+            "card_type_counts": card_type_counts,
+            "rating_counts": rating_counts,
+            "state_counts": state_counts,
+            "learning_curve": learning_curve,
+            "average_stability": round(sum(stability_values) / len(stability_values), 2) if stability_values else None,
+            "average_difficulty": round(sum(difficulty_values) / len(difficulty_values), 2) if difficulty_values else None,
         }, status=status.HTTP_200_OK)
 
 

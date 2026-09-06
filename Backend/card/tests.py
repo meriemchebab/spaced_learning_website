@@ -288,6 +288,15 @@ class AnalyticsEndpointTests(APITestCase):
         self.assertEqual(response.data["overall_retention_rate"], 90.0)
         self.assertIn("upcoming_workload", response.data)
         self.assertEqual(response.data["upcoming_workload"]["due_today"], 1)
+        self.assertEqual(response.data["card_type_counts"]["question"], 1)
+        self.assertEqual(response.data["rating_counts"]["good"], 1)
+        self.assertEqual(len(response.data["history"]), 1)
+        self.assertEqual(response.data["history"][0]["rating"], "good")
+        self.assertEqual(len(response.data["learning_curve"]), 90)
+        self.assertEqual(
+            sum(point["reviews"] for point in response.data["learning_curve"]),
+            1,
+        )
 
 
 @override_settings(USE_TZ=True)

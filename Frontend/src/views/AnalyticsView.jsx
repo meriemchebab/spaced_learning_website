@@ -26,6 +26,7 @@ ChartJS.register(
 );
 
 export const AnalyticsView = () => {
+  const [analytics, setAnalytics] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,8 +34,10 @@ export const AnalyticsView = () => {
     const loadAnalytics = async () => {
       try {
         setLoading(true);
-        const data = await api.fetchDashboardStats();
-        setHistory(Array.isArray(data.history) ? data.history : []);
+        const data = await api.fetchAnalytics();
+        const safeData = data && typeof data === 'object' ? data : {};
+        setAnalytics(safeData);
+        setHistory(Array.isArray(safeData.history) ? safeData.history : []);
       } catch (err) {
         console.error("Failed to load analytics data:", err);
       } finally {
@@ -48,19 +51,17 @@ export const AnalyticsView = () => {
     return <div className="loading-state">Loading learning analytics...</div>;
   }
 
-  // 1. Reviews this week calculations (with sample fallbacks if new account)
+  const analyticsData = analytics || {};
+
+  // 1. Reviews this week, calculated from persisted review logs.
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const weekCounts = history.length > 0 ? Array(7).fill(0) : [4, 8, 5, 12, 9, 14, 10];
+  const weekCounts = Array(7).fill(0);
   const now = Date.now();
 
-  if (history.length > 0) {
-    history.forEach(h => {
-      const diff = Math.floor((now - h.ts) / 86400000);
-      if (diff < 7) {
-        weekCounts[6 - diff]++;
-      }
-    });
-  }
+  history.forEach(h => {
+    const diff = Math.floor((now - h.ts) / 86400000);
+    if (diff >= 0 && diff < 7) weekCounts[6 - diff]++;
+  });
 
   const weekLabels = [];
   for (let i = 6; i >= 0; i--) {
@@ -82,18 +83,15 @@ export const AnalyticsView = () => {
     ]
   };
 
-  // 2. Card type distribution calculations
-  const ctypeCount = history.length > 0 
-    ? { exercise: 0, concept: 0, mistake: 0, question: 0, note: 0 }
-    : { exercise: 12, concept: 24, mistake: 8, question: 18, note: 6 };
-
-  if (history.length > 0) {
-    history.forEach(h => {
-      if (ctypeCount[h.ctype] !== undefined) {
-        ctypeCount[h.ctype]++;
-      }
-    });
-  }
+  // 2. Card type distribution from the user's cards.
+  const ctypeCount = {
+    exercise: 0,
+    concept: 0,
+    mistake: 0,
+    question: 0,
+    note: 0,
+    ...(analyticsData.card_type_counts || {})
+  };
 
   const cardTypesData = {
     labels: ['Exercise', 'Concept', 'Mistake', 'Question', 'Note'],
@@ -107,26 +105,22 @@ export const AnalyticsView = () => {
     ]
   };
 
-  // 3. Ratings over time calculations
-  const ratingCount = history.length > 0 
-    ? { hard: 0, good: 0, easy: 0 }
-    : { hard: 14, good: 38, easy: 22 };
-
-  if (history.length > 0) {
-    history.forEach(h => {
-      if (ratingCount[h.rating] !== undefined) {
-        ratingCount[h.rating]++;
-      }
-    });
-  }
+  // 3. Rating breakdown from persisted review logs.
+  const ratingCount = {
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+    ...(analyticsData.rating_counts || {})
+  };
 
   const ratingCountsData = {
-    labels: ['Hard (Forgot)', 'Good (Recalled)', 'Easy (Instant)'],
+    labels: ['Again (Forgot)', 'Hard', 'Good', 'Easy'],
     datasets: [
       {
         data: Object.values(ratingCount),
-        backgroundColor: ['rgba(222, 53, 11, 0.3)', 'rgba(230, 160, 40, 0.3)', 'rgba(29, 158, 117, 0.3)'],
-        borderColor: ['var(--red)', 'var(--amber)', 'var(--green)'],
+        backgroundColor: ['rgba(222, 53, 11, 0.3)', 'rgba(230, 160, 40, 0.3)', 'rgba(55, 138, 221, 0.3)', 'rgba(29, 158, 117, 0.3)'],
+        borderColor: ['var(--red)', 'var(--amber)', 'var(--blue)', 'var(--green)'],
         borderWidth: 1.5,
         borderRadius: 6
       }
@@ -172,7 +166,9 @@ export const AnalyticsView = () => {
   return (
     <div className="page-analytics" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Learning & Cumulative Velocity Section */}
-      <LearningCurveChart />
+      <LearningCurveChart
+        curve={Array.isArray(analyticsData.learning_curve) ? analyticsData.learning_curve : []}
+      />
 
       <div className="analytics-grid-top">
         {/* Reviews this week */}
@@ -193,7 +189,10 @@ export const AnalyticsView = () => {
       </div>
 
       {/* Forgetting Curve Simulator */}
-      <ForgettingCurveChart />
+      <ForgettingCurveChart
+        initialStability={analyticsData.average_stability}
+        initialDifficulty={analyticsData.average_difficulty}
+      />
 
       {/* Ratings accuracy breakdown */}
       <div className="card analytics-card full-width-card">
