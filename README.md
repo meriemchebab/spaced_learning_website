@@ -18,9 +18,9 @@ The app uses both the FSRS scheduler and its deep learning optimizer to adapt to
 
 
 
-## Core Algorithm — FSRS (Free Spaced Repetition Scheduler)
+## Core Algorithm : FSRS (Free Spaced Repetition Scheduler)
 
-The FSRS algorithm is a **machine-learning-based memory model** that replaces traditional SM-2 style heuristics with a mathematically rigorous approach:
+The FSRS algorithm is a **machine-learning-based memory model** 
 
 | Concept | Description |
 |---|---|
@@ -31,6 +31,7 @@ The FSRS algorithm is a **machine-learning-based memory model** that replaces tr
 | **21 Parameters** | Model weights optimized on large-scale review datasets using stochastic gradient descent. |
 | **Target Retention** | Configurable per-user (default 90%). The scheduler solves for the interval where R = target. |
 
+for more info check the github repository [repo](https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler)
 
 ---
 
